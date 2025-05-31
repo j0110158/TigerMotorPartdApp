@@ -2,73 +2,129 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Category {
-    // Attributes
-    private String categoryName; // Changed to represent a single category name
-    private int categoryQuantity; // Total quantity of items in this category
+    private static final int RESTOCK_THRESHOLD = 5;
+    private static final String DEFAULT_CATEGORY = "Uncategorized";
+    
+    private String categoryName;
+    private int categoryQuantity;
 
-    // Constructor
+    /**
+     * Creates a new category with the specified name and zero quantity.
+     * @param categoryName The name of the category
+     * @throws IllegalArgumentException if categoryName is null or empty
+     */
     public Category(String categoryName) {
-        this.categoryName = categoryName;
-        this.categoryQuantity = 0; // Start with zero quantity
+        this(categoryName, 0);
     }
 
-    // Getters
+    /**
+     * Creates a new category with the specified name and quantity.
+     * @param categoryName The name of the category
+     * @param categoryQuantity The initial quantity of the category
+     * @throws IllegalArgumentException if categoryName is null or empty, or if categoryQuantity is negative
+     */
+    public Category(String categoryName, int categoryQuantity) {
+        if (categoryName == null || categoryName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category name cannot be null or empty");
+        }
+        if (categoryQuantity < 0) {
+            throw new IllegalArgumentException("Category quantity cannot be negative");
+        }
+        this.categoryName = categoryName;
+        this.categoryQuantity = categoryQuantity;
+    }
+
+    /**
+     * Gets the name of the category.
+     * @return The category name
+     */
     public String getCategoryName() {
         return categoryName;
     }
 
+    /**
+     * Sets the name of the category.
+     * @param categoryName The new category name
+     * @throws IllegalArgumentException if categoryName is null or empty
+     */
+    public void setCategoryName(String categoryName) {
+        if (categoryName == null || categoryName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category name cannot be null or empty");
+        }
+        this.categoryName = categoryName;
+    }
+
+    /**
+     * Gets the quantity of the category.
+     * @return The category quantity
+     */
     public int getCategoryQuantity() {
         return categoryQuantity;
     }
 
-    // Setters
-    // Removed setItemCategory as categoryName is a single string
-    // Removed setCategoryQuantity(name:STRING) as quantity is managed directly
-
-    // Method to set the total quantity for this category, with validation
+    /**
+     * Sets the quantity of the category and checks if restocking is needed.
+     * @param quantity The new category quantity
+     * @throws IllegalArgumentException if quantity is negative
+     */
     public void setCategoryQuantity(int quantity) {
+        if (quantity < 0) {
+            throw new IllegalArgumentException("Category quantity cannot be negative");
+        }
         this.categoryQuantity = quantity;
-        // Validate category quantity and trigger alert
-        if (this.categoryQuantity < 5) {
-            System.out.println("Good morning, please restock items for category: " + categoryName);
-            // TODO: Implement a more robust alerting mechanism
-        }
+        checkRestockNeeded();
     }
 
-    // Method to increase category quantity
+    /**
+     * Increases the category quantity by the specified amount.
+     * @param amount The amount to increase by
+     * @throws IllegalArgumentException if amount is negative
+     */
     public void increaseQuantity(int amount) {
-        if (amount > 0) {
-            this.categoryQuantity += amount;
-             // The alert is triggered in setCategoryQuantity, so we call it here too after updating.
-            setCategoryQuantity(this.categoryQuantity); // This will trigger the alert if needed
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount cannot be negative");
         }
+        this.categoryQuantity += amount;
+        checkRestockNeeded();
     }
 
-    // Method to decrease category quantity
+    /**
+     * Decreases the category quantity by the specified amount.
+     * @param amount The amount to decrease by
+     * @throws IllegalArgumentException if amount is negative
+     */
     public void decreaseQuantity(int amount) {
-         if (amount > 0) {
-            this.categoryQuantity -= amount;
-             if (this.categoryQuantity < 0) {
-                this.categoryQuantity = 0; // Ensure quantity doesn't go below zero
-            }
-             // The alert is triggered in setCategoryQuantity, so we call it here too after updating.
-            setCategoryQuantity(this.categoryQuantity); // This will trigger the alert if needed
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+        this.categoryQuantity = Math.max(0, this.categoryQuantity - amount);
+        checkRestockNeeded();
+    }
+
+    /**
+     * Checks if the category needs restocking based on the threshold.
+     * @return true if the category needs restocking, false otherwise
+     */
+    public boolean needsRestock() {
+        return categoryQuantity < RESTOCK_THRESHOLD;
+    }
+
+    private void checkRestockNeeded() {
+        if (needsRestock()) {
+            System.out.println("Good morning, please restock items for category: " + categoryName);
         }
     }
 
-    // Override equals and hashCode for easier searching in lists
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Category category = (Category) o;
-        return categoryName.equalsIgnoreCase(category.categoryName); // Compare category names (case-insensitive)
+        return categoryName.equals(category.categoryName);
     }
 
     @Override
     public int hashCode() {
-        return categoryName.toLowerCase().hashCode(); // Use lowercase for consistent hashing
+        return categoryName.hashCode();
     }
-
-    // TODO: Add methods for error handling as needed.
 }
