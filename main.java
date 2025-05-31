@@ -567,7 +567,8 @@ public class Main {
 
     // Helper method to add a new category if it doesn't exist
     private void addCategory(String categoryName) {
-        if (categoryName == null || categoryName.trim().isEmpty() || categoryName.equalsIgnoreCase(UNCATEGORIZED)) {
+        // Allow the UNCATEGORIZED category name, only check for null or empty.
+        if (categoryName == null || categoryName.trim().isEmpty()) {
              System.out.println("Invalid category name.");
              return;
         }
