@@ -6,7 +6,7 @@ public class Category {
     private static final String DEFAULT_CATEGORY = "Uncategorized";
     
     private String categoryName;
-    private int categoryQuantity;
+    public int categoryQuantity;
 
     /**
      * Creates a new category with the specified name and zero quantity.

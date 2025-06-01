@@ -1,0 +1,14 @@
+CATEGORY DATA
+
+CATEGORY,Helmet,1
+CATEGORY,Side Gasket,1
+
+ITEM DATA
+
+ITEM,7204,Helmet 103,300.0,1,Helmet
+ITEM,9603,Side Gasket 9000,200.0,1,Side Gasket
+
+LOG DATA
+
+LOG,2025-06-01 16:16:00,ADD,Helmet 103,7204,1,Helmet
+LOG,2025-06-01 16:16:49,ADD,Side Gasket 9000,9603,1,Side Gasket

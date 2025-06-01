@@ -8,21 +8,22 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.text.SimpleDateFormat;
+import java.io.File;
 
 public class InventoryMgt {
     private List<Item> inventoryItems;
     private List<Category> itemCategories;
+    private List<String> transactionLogs;
     private Availability availabilityChecker;
-    private static final String INVENTORY_FILE = "inventory.csv";
-    private static final String SAVED_ITEMS_FILE = "saved_items.csv";
-    private static final String LOGBOOK_FILE = "logbook.csv";
-    private static final String CATEGORIES_FILE = "categories.csv";
+
+    public static final String DATA_FILE = "inventory_data.csv";
     private static final String UNCATEGORIZED = "Uncategorized";
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public InventoryMgt() {
         inventoryItems = new ArrayList<>();
         itemCategories = new ArrayList<>();
+        transactionLogs = new ArrayList<>();
         availabilityChecker = new Availability();
     }
 
@@ -42,7 +43,7 @@ public class InventoryMgt {
         return null;
     }
 
-    private Category findCategoryByName(String categoryName) {
+    public Category findCategoryByName(String categoryName) {
         if (categoryName == null || categoryName.trim().isEmpty()) {
             throw new IllegalArgumentException("Category name cannot be null or empty");
         }
@@ -166,74 +167,195 @@ public class InventoryMgt {
     }
 
     public void loadCategories() {
-        // Initialize with default categories
-        addCategory("Engine Parts", 0);
-        addCategory("Electrical", 0);
-        addCategory("Body Parts", 0);
-        addCategory("Accessories", 0);
+        // Categories are now loaded from the data file in importData()
+        // Hardcoded initialization is removed.
     }
 
-    public void importData() {
-        System.out.println("Attempting to import data from " + INVENTORY_FILE + "...");
+    public void importData(String filePath) {
+        System.out.println("Attempting to import data from " + filePath + "...");
         inventoryItems.clear();
+        itemCategories.clear(); // Clear existing categories
+        transactionLogs.clear(); // Clear existing logs
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(INVENTORY_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length >= 4) {
-                    try {
-                        String modelNumber = parts[0].trim();
-                        String modelName = parts[1].trim();
-                        double modelPrice = Double.parseDouble(parts[2].trim());
-                        int itemQuantity = Integer.parseInt(parts[3].trim());
-                        String itemCategory = (parts.length >= 5) ? parts[4].trim() : UNCATEGORIZED;
+                line = line.trim();
+                if (line.isEmpty() || (!line.startsWith("CATEGORY,") && !line.startsWith("ITEM,") && !line.startsWith("LOG,"))) {
+                    // Skip empty lines or lines not starting with a known prefix
+                    continue;
+                }
 
-                        Item importedItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
-                        inventoryItems.add(importedItem);
-                        updateCategoryQuantity(itemCategory, itemQuantity);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Skipping invalid line format in " + INVENTORY_FILE + ": " + line);
+                if (line.startsWith("CATEGORY,")) {
+                    String[] parts = line.substring("CATEGORY,".length()).split(",");
+                    if (parts.length >= 1) {
+                        try {
+                            String categoryName = parts[0].trim();
+                            // We will recalculate category quantity based on items later
+                            Category category = new Category(categoryName, 0); // Initialize with 0 quantity
+                            itemCategories.add(category);
+                        } catch (Exception e) {
+                            System.err.println("Skipping invalid CATEGORY line in " + filePath + ": " + line);
+                        }
                     }
+                } else if (line.startsWith("ITEM,")) {
+                    String[] parts = line.substring("ITEM,".length()).split(",");
+                    if (parts.length >= 5) { // ModelNumber, ModelName, ModelPrice, ItemQuantity, ItemCategory
+                        try {
+                            String modelNumber = parts[0].trim();
+                            String modelName = parts[1].trim();
+                            double modelPrice = Double.parseDouble(parts[2].trim());
+                            int itemQuantity = Integer.parseInt(parts[3].trim()); // Expecting 1 based on discussion
+                            String itemCategory = parts[4].trim();
+
+                            if (itemQuantity != 1) {
+                                System.err.println("Warning: Item quantity in file is not 1. Using 1 for item " + modelNumber);
+                                itemQuantity = 1; // Enforce program logic quantity
+                            }
+
+                            Item importedItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
+                            inventoryItems.add(importedItem);
+                            // Category quantity will be updated after all items are loaded
+                        } catch (NumberFormatException e) {
+                            System.err.println("Skipping invalid ITEM line (Number Format Error) in " + filePath + ": " + line);
+                        } catch (Exception e) {
+                             System.err.println("Skipping invalid ITEM line in " + filePath + ": " + line);
+                        }
+                    }
+                } else if (line.startsWith("LOG,")) {
+                     // LOG,Timestamp,Action,ModelName,ModelNumber,Quantity,Category (optional)
+                    String logEntry = line.substring("LOG,".length());
+                    transactionLogs.add(logEntry); // Add raw log entry for now
                 }
             }
-            System.out.println("Data imported successfully from " + INVENTORY_FILE + ". Total items: " + inventoryItems.size());
+
+            // After loading, recalculate category quantities based on items
+            for (Category category : itemCategories) {
+                category.setCategoryQuantity(0); // Reset category quantity before summing
+            }
+            for (Item item : inventoryItems) {
+                 Category category = findCategoryByName(item.getItemCategory());
+                 if (category != null) {
+                     category.increaseQuantity(item.getItemQuantity()); // Add item quantity (which is 1)
+                 } else {
+                     System.err.println("Warning: Item " + item.getModelNumber() + " has category " + item.getItemCategory() + " which was not found during import.");
+                     // Optionally create a default category or handle this case
+                 }
+            }
+
+            System.out.println("Data imported successfully from " + filePath + ". Total items: " + inventoryItems.size() + ", Categories: " + itemCategories.size() + ", Log entries: " + transactionLogs.size());
         } catch (IOException e) {
-            System.out.println("No existing " + INVENTORY_FILE + " found or error reading file. Starting with empty inventory.");
+            System.out.println("No existing " + filePath + " found or error reading file. Starting with empty inventory and categories.");
         }
     }
 
-    public void exportData() {
-        System.out.println("Exporting data to " + INVENTORY_FILE + "...");
-        try (PrintWriter writer = new PrintWriter(new FileWriter(INVENTORY_FILE))) {
-            for (Item item : inventoryItems) {
-                writer.println(item.getModelNumber() + "," + item.getModelName() + "," + 
-                             item.getModelPrice() + "," + item.getItemQuantity() + "," + 
-                             item.getItemCategory());
+    public void exportData(String filePath) {
+        System.out.println("Exporting data to " + filePath + "...");
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
+            // Write Categories
+            writer.println("CATEGORY DATA");
+            writer.println(); // Blank line for readability
+            for (Category category : itemCategories) {
+                writer.println("CATEGORY," + category.getCategoryName() + "," + category.getCategoryQuantity());
             }
-            System.out.println("Data exported successfully to " + INVENTORY_FILE + ".");
+
+            writer.println(); // Blank line for readability
+
+            // Write Items
+            writer.println("ITEM DATA");
+            writer.println(); // Blank line for readability
+            for (Item item : inventoryItems) {
+                writer.println("ITEM," + item.getModelNumber() + "," + item.getModelName() + "," +
+                               item.getModelPrice() + "," + item.getItemQuantity() + "," + // Item quantity should be 1
+                               item.getItemCategory());
+            }
+
+            writer.println(); // Blank line for readability
+
+            // Write Logs
+            writer.println("LOG DATA");
+             writer.println(); // Blank line for readability
+            for (String logEntry : transactionLogs) {
+                 writer.println("LOG," + logEntry); // Write the raw log entry back
+            }
+
+            System.out.println("Data exported successfully to " + filePath + ".");
         } catch (IOException e) {
             System.err.println("Error exporting data to file: " + e.getMessage());
         }
     }
 
-    public void saveCategories() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(CATEGORIES_FILE))) {
-            for (Category category : itemCategories) {
-                writer.println(category.getCategoryName() + "," + category.getCategoryQuantity());
-            }
-            System.out.println("Categories saved successfully to " + CATEGORIES_FILE);
+    public void saveData() {
+        System.out.println("Saving data to default file: " + DATA_FILE + "...");
+        exportData(DATA_FILE); // Call exportData with the default file path
+    }
+
+    public void logTransaction(String action, String modelName, String modelNumber, int quantity) {
+        String timestamp = dateFormat.format(new Date());
+        // Assuming category is needed in log, might need to retrieve it based on item
+        String itemCategory = "";
+         Item item = findItemByModelNumber(modelNumber);
+         if (item != null) {
+             itemCategory = item.getItemCategory();
+         }
+
+        String logEntryContent = timestamp + "," + action + "," + modelName + "," + modelNumber + "," + quantity + "," + itemCategory;
+
+        transactionLogs.add(logEntryContent); // Add to in-memory log list
+
+        // Append to the data file immediately
+        try (PrintWriter logWriter = new PrintWriter(new FileWriter(DATA_FILE, true))) {
+            logWriter.println("LOG," + logEntryContent);
         } catch (IOException e) {
-            System.err.println("Error saving categories: " + e.getMessage());
+            System.err.println("Error writing transaction to log file: " + e.getMessage());
         }
     }
 
-    private void logTransaction(String action, String modelName, String modelNumber, int quantity) {
-        try (PrintWriter logWriter = new PrintWriter(new FileWriter(LOGBOOK_FILE, true))) {
-            String timestamp = dateFormat.format(new Date());
-            logWriter.println(timestamp + "," + action + "," + modelName + "," + modelNumber + "," + quantity);
+    public List<String> getTransactionLogs() {
+        return transactionLogs;
+    }
+
+    public List<String> readTransactionLogsFromFile() {
+        List<String> logsFromFile = new ArrayList<>();
+        System.out.println("Reading transaction log from file: " + DATA_FILE + "...");
+        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("LOG,")) {
+                    logsFromFile.add(line.substring("LOG,".length()));
+                }
+            }
+            System.out.println("Finished reading transaction log from file.");
         } catch (IOException e) {
-            System.err.println("Error writing to logbook file: " + e.getMessage());
+            System.err.println("Error reading transaction log file: " + e.getMessage());
         }
+        return logsFromFile;
+    }
+
+    public boolean dataFileExists() {
+        File dataFile = new File(DATA_FILE);
+        return dataFile.exists();
+    }
+
+    public boolean createDataFile() {
+        System.out.println("Attempting to create data file: " + DATA_FILE + "...");
+        try {
+            File dataFile = new File(DATA_FILE);
+            if (dataFile.createNewFile()) {
+                System.out.println("Data file created successfully: " + DATA_FILE);
+                return true;
+            } else {
+                System.out.println("Data file already exists: " + DATA_FILE);
+                return true; // File already exists is also a success for creation check
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating data file: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Category> getItemCategories() {
+        return itemCategories;
     }
 }

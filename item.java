@@ -60,36 +60,4 @@ public class Item {
     public void setItemCategory(String category) {
         this.itemCategory = category;
     }
-
-    // Method to increase quantity
-    public void increaseQuantity(int amount) {
-        if (amount > 0) {
-            this.itemQuantity += amount;
-        }
-    }
-
-    // Method to decrease quantity
-    public void decreaseQuantity(int amount) {
-        if (amount > 0) {
-            this.itemQuantity -= amount;
-            if (this.itemQuantity < 0) {
-                this.itemQuantity = 0;
-            }
-        }
-    }
-
-    // saveThisItem function
-    public void saveThisItem() {
-        String filename = "saved_items.csv";
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filename, true))) { // Append to file
-            // CSV format: modelNumber,modelName,modelPrice,itemQuantity,itemCategory
-            writer.println(modelNumber + "," + modelName + "," + modelPrice + "," + itemQuantity + "," + itemCategory);
-            System.out.println("Item details saved to " + filename + ": " + modelName);
-        } catch (IOException e) {
-            System.err.println("Error saving item details to file: " + e.getMessage());
-            // TODO: Implement more robust error handling/logging.
-        }
-    }
-
-    // TODO: Add methods for error handling as needed.
 }
