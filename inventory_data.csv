@@ -1,14 +1,46 @@
 CATEGORY DATA
 
-CATEGORY,Helmet,1
-CATEGORY,Side Gasket,1
+CATEGORY,Helmet,4
+CATEGORY,Side Gasket,2
+CATEGORY,Knuckle Bearing,3
+CATEGORY,Oil Seal,3
+CATEGORY,Ignition Coil,2
+CATEGORY,Ignition Switch,1
 
 ITEM DATA
 
 ITEM,7204,Helmet 103,300.0,1,Helmet
 ITEM,9603,Side Gasket 9000,200.0,1,Side Gasket
+ITEM,8190,Aura Knuckle Bearing Set HKZ/NP,100.0,1,Knuckle Bearing
+ITEM,10111,Barako Knuckle Bearing Set KHZ,100.0,1,Knuckle Bearing
+ITEM,6300,Side Gasket 8000,900.0,1,Side Gasket
+ITEM,12455,GD110 Knuckle Bearing Set,120.0,1,Knuckle Bearing
+ITEM,11291,CG150 Oil Seal Kit (6pcs),50.0,1,Oil Seal
+ITEM,6648,Wave125 Oil Seal Kit (5pcs),50.0,1,Oil Seal
+ITEM,10381,XRM110 Oil Seal Kit (5pcs),35.0,1,Oil Seal
+ITEM,7206,Moto Helmet For Kids Fullface Shoe (Blue),400.0,1,Helmet
+ITEM,7201,Moto Helmet For Kids Fullface Shoe (Red),400.0,1,Helmet
+ITEM,3933,Moto Helmet Fullface Shoe (BLK),500.0,1,Helmet
+ITEM,8744,Barako/BC175 IGNITION COIL,130.0,1,Ignition Coil
+ITEM,10777,Crypton Ignition Coil,135.0,1,Ignition Coil
+ITEM,9436,Wave100R Ignition Switch HK2,115.0,1,Ignition Switch
 
 LOG DATA
 
 LOG,2025-06-01 16:16:00,ADD,Helmet 103,7204,1,Helmet
 LOG,2025-06-01 16:16:49,ADD,Side Gasket 9000,9603,1,Side Gasket
+LOG,2025-06-01 20:00:34,ADD,Aura Knuckle Bearing Set HKZ/NP,8190,1,Knuckle Bearing
+LOG,2025-06-01 20:01:09,ADD,Barako Knuckle Bearing Set KHZ,10111,1,Knuckle Bearing
+LOG,2025-06-01 21:20:10,ADD,Side Gasket 8000,6300,1,Side Gasket
+LOG,2025-06-01 21:20:36,REMOVE,Side Gasket 8000,6300,1,Side Gasket
+LOG,2025-06-01 21:20:42,REMOVE,Side Gasket 8000,6300,1,Side Gasket
+LOG,2025-06-01 21:22:47,ADD,GD110 Knuckle Bearing Set,12455,1,Knuckle Bearing
+LOG,2025-06-01 21:23:22,ADD,CG150 Oil Seal Kit (6pcs),11291,1,Oil Seal
+LOG,2025-06-01 21:24:04,ADD,Wave125 Oil Seal Kit (5pcs),6648,1,Oil Seal
+LOG,2025-06-01 21:25:03,ADD,XRM110 Oil Seal Kit (5pcs),10381,1,Oil Seal
+LOG,2025-06-01 21:25:46,ADD,Moto Helmet For Kids Fullface Shoe (Blue),7206,1,Helmet
+LOG,2025-06-01 21:26:19,ADD,Moto Helmet For Kids Fullface Shoe (Red),7201,1,Helmet
+LOG,2025-06-01 21:26:47,ADD,Moto Helmet Fullface Shoe (BLK),3933,1,Helmet
+LOG,2025-06-01 21:27:15,ADD,Barako/BC175 IGNITION COIL,8744,1,Ignition Coil
+LOG,2025-06-01 21:27:50,ADD,Crypton Ignition Coil,10777,1,Ignition Coil
+LOG,2025-06-01 21:36:47,ADD,Wave100R Ignition Switch HK2,9436,1,Ignition Switch

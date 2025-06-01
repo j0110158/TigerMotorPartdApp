@@ -1,7 +1,9 @@
+/*
 import java.util.Scanner;
 import java.util.List;
 
 public class Console {
+     
     private static Scanner scanner = new Scanner(System.in);
     private static InventoryMgt inventoryManager = new InventoryMgt();
     private static Availability availabilityChecker = new Availability();
@@ -334,3 +336,4 @@ public class Console {
         }
     }
 }
+*/
