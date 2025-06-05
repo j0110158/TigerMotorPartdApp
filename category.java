@@ -1,9 +1,7 @@
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class Category {
     private static final int RESTOCK_THRESHOLD = 5;
-    private static final String DEFAULT_CATEGORY = "Uncategorized";
     
     private String categoryName;
     public int categoryQuantity;
