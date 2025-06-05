@@ -55,4 +55,5 @@ There have been barely OOP classes detailed: May 27 (Earthquake occurred), ALT+F
 
 🏁 SECOND Batch OOP Presentations* - June 17, 2025, Tuesday. OOP Lab time
 - [ ] 6th Weekly Meeting (June 15, 2025, Time TBA) > Final revisions if ever and preparations
+
 🏁 ALTF4 Post-Project Review Talk* - June 18, 2025 (8-9pm)
