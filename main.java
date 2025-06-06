@@ -10,6 +10,11 @@ import java.util.Iterator; // Import Iterator for safe removal
 import java.util.Date; // Import Date for timestamping logs
 import java.text.SimpleDateFormat; // Import SimpleDateFormat for date formatting
 import java.util.stream.Collectors; // For stream operations
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTree;
+import java.awt.BorderLayout;
+import java.awt.Color;
 
 public class Main {
 

@@ -20,6 +20,10 @@ import javax.swing.UIManager;
 import javax.swing.ImageIcon;
 import java.awt.event.KeyEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.plaf.basic.*;
 
 public class InventorySwingGUI extends JFrame implements ActionListener {
     private InventoryMgt inventoryManager;
@@ -28,7 +32,9 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
     private JTree categoryTree;
     private DefaultTreeModel categoryTreeModel;
     private JTextField searchField;
-    private JLabel statusLabel;
+    private JTextArea statusTextArea;
+    private JTextArea restockTextArea;
+    private JScrollPane restockScrollPane;
 
     public InventorySwingGUI() {
         // Initialize inventory manager
@@ -43,7 +49,12 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
         // Set look and feel to system default for Aero feel
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -60,7 +71,9 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
         // Left side - Category tree
         JPanel categoryPanel = new JPanel(new BorderLayout());
-        categoryPanel.setBorder(BorderFactory.createTitledBorder("Categories"));
+        categoryPanel.setBorder(null);
+        Color bg = new Color(240, 240, 240);
+        categoryPanel.setBackground(bg);
         categoryTree = new JTree();
         categoryTree.setShowsRootHandles(true);
         categoryTree.setRootVisible(true);
@@ -73,23 +86,52 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 updateItemTable();
             }
         });
-        categoryPanel.add(new JScrollPane(categoryTree), BorderLayout.CENTER);
+        JScrollPane categoryScroll = new JScrollPane(categoryTree);
+        categoryScroll.setBorder(null);
+        categoryScroll.setBackground(null);
+        JSplitPane categorySplitPane = new JSplitPane(
+            JSplitPane.VERTICAL_SPLIT,
+            categoryScroll,
+            restockScrollPane
+        );
+        categorySplitPane.setResizeWeight(0.7); // 70% for tree, 30% for alerts (adjust as needed)
+        categorySplitPane.setDividerSize(10);    // Thicker divider for easier dragging
+        categorySplitPane.setBackground(null);
+        categorySplitPane.setUI(new BasicSplitPaneUI() {
+            @Override
+            public BasicSplitPaneDivider createDefaultDivider() {
+                return new BasicSplitPaneDivider(this) {
+                    @Override
+                    public void paint(Graphics g) {
+                        g.setColor(new Color(238, 238, 240));
+                        g.fillRect(0, 0, getSize().width, getSize().height);
+                        super.paint(g);
+                    }
+                };
+            }
+        });
+        categoryPanel.setLayout(new BorderLayout());
+        categoryPanel.add(categorySplitPane, BorderLayout.CENTER);
 
         // Right side - Item table and search
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBorder(BorderFactory.createTitledBorder("Inventory Items"));
+        itemPanel.setBackground(bg);
 
         // Search bar with improved layout
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         searchField = new JTextField(20);
         searchField.setActionCommand("Search");
         searchField.setToolTipText("Enter model number, name, or category to search");
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
         JButton searchButton = new JButton("Search");
         searchButton.setToolTipText("Search inventory items");
+        searchButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         JButton clearButton = new JButton("Clear");
         clearButton.setToolTipText("Clear search and show all items");
+        clearButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         searchPanel.add(new JLabel("Search:"));
         searchPanel.add(searchField);
@@ -178,11 +220,30 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
         add(splitPane, BorderLayout.CENTER);
 
-        // Status bar with improved appearance
-        statusLabel = new JLabel("Ready");
-        statusLabel.setBorder(BorderFactory.createEtchedBorder());
-        statusLabel.setPreferredSize(new Dimension(getWidth(), 25));
-        add(statusLabel, BorderLayout.SOUTH);
+        // Status bar with improved appearance (scrollable alert area)
+        statusTextArea = new JTextArea();
+        statusTextArea.setEditable(false);
+        statusTextArea.setLineWrap(true);
+        statusTextArea.setWrapStyleWord(true);
+        statusTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JScrollPane statusScrollPane = new JScrollPane(statusTextArea);
+        statusScrollPane.setPreferredSize(new Dimension(getWidth(), 60)); // Fixed height
+        add(statusScrollPane, BorderLayout.SOUTH);
+
+        // Bottom panel for restock notification (bottom right)
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setPreferredSize(new Dimension(getWidth(), 90)); // Match the new height
+        restockTextArea = new JTextArea();
+        restockTextArea.setEditable(false);
+        restockTextArea.setLineWrap(true);
+        restockTextArea.setWrapStyleWord(true);
+        restockTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        restockTextArea.setBackground(bg);
+        restockTextArea.setBorder(BorderFactory.createTitledBorder("Restock Alerts"));
+
+        restockScrollPane = new JScrollPane(restockTextArea);
+        restockScrollPane.setPreferredSize(new Dimension(categoryPanel.getWidth(), 250)); // Even larger height
+        categoryPanel.add(restockScrollPane, BorderLayout.SOUTH);
 
         // Set window icon (placeholder - you'll need to provide the actual icon)
         try {
@@ -195,6 +256,17 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         inventoryManager.importData(InventoryMgt.DATA_FILE); // Load existing data
         updateCategoryTree();
         updateItemTable();
+
+        // For the whole window
+        Color mainBg = new Color(100, 100, 100);
+        Color cardBg = new Color(100, 100, 100); 
+
+        // getContentPane().setBackground(mainBg);
+        // categoryPanel.setBackground(mainBg);
+        // itemPanel.setBackground(mainBg);
+        // restockTextArea.setBackground(cardBg);
+        // splitPane.setBackground(new Color(49, 52, 99));
+        // splitPane.setUI(...);
 
         setVisible(true);
     }
@@ -296,7 +368,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
             case "Refresh":
                 updateCategoryTree();
                 updateItemTable();
-                statusLabel.setText("Inventory refreshed.");
+                statusTextArea.setText("Inventory refreshed.");
                 break;
             case "Import Data":
                 importData();
@@ -332,7 +404,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 itemTableModel.addRow(new Object[]{item.getModelNumber(), item.getModelName(), item.getModelPrice(), item.getItemQuantity(), item.getItemCategory()});
             }
         }
-        statusLabel.setText("Filtered items by: " + searchTerm);
+        statusTextArea.setText("Filtered items by: " + searchTerm);
     }
 
     // Method to filter items in the table by category
@@ -350,7 +422,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 itemTableModel.addRow(new Object[]{item.getModelNumber(), item.getModelName(), item.getModelPrice(), item.getItemQuantity(), item.getItemCategory()});
             }
         }
-        statusLabel.setText("Filtered items by category: " + categoryName);
+        statusTextArea.setText("Filtered items by category: " + categoryName);
     }
 
     // Method to remove the selected item from the table and backend
@@ -379,7 +451,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
                 updateItemTable(); // Refresh table
                 updateCategoryTree(); // Refresh tree
-                statusLabel.setText("Item removed successfully: " + modelNumber);
+                statusTextArea.setText("Item removed successfully: " + modelNumber);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error removing item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
@@ -483,9 +555,9 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                         int createCategoryResponse = JOptionPane.showConfirmDialog(editItemDialog, "Category \'" + updatedItemCategory + "\' not found. Do you want to create it?", "Category Not Found", JOptionPane.YES_NO_OPTION);
                         if (createCategoryResponse == JOptionPane.YES_OPTION) {
                             inventoryManager.addCategory(updatedItemCategory, 0); // Initial quantity 0
-                            statusLabel.setText("Category \'" + updatedItemCategory + "\' created.");
+                            statusTextArea.setText("Category \'" + updatedItemCategory + "\' created.");
                         } else {
-                            statusLabel.setText("Item not updated: Category not created.");
+                            statusTextArea.setText("Item not updated: Category not created.");
                             editItemDialog.dispose();
                             return;
                         }
@@ -505,7 +577,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
                     updateItemTable(); // Refresh table
                     updateCategoryTree(); // Refresh tree
-                    statusLabel.setText("Item updated successfully: " + itemToEdit.getModelName());
+                    statusTextArea.setText("Item updated successfully: " + itemToEdit.getModelName());
                     editItemDialog.dispose(); // Close dialog
 
                 } catch (NumberFormatException ex) {
@@ -605,9 +677,9 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                         int createCategoryResponse = JOptionPane.showConfirmDialog(addItemDialog, "Category \'" + itemCategory + "\' not found. Do you want to create it?", "Category Not Found", JOptionPane.YES_NO_OPTION);
                         if (createCategoryResponse == JOptionPane.YES_OPTION) {
                             inventoryManager.addCategory(itemCategory, 0); // Initial quantity 0, will be updated by item
-                            statusLabel.setText("Category \'" + itemCategory + "\' created.");
+                            statusTextArea.setText("Category \'" + itemCategory + "\' created.");
                         } else {
-                            statusLabel.setText("Item not added: Category not created.");
+                            statusTextArea.setText("Item not added: Category not created.");
                             addItemDialog.dispose(); // Close dialog
                             return;
                         }
@@ -621,7 +693,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
                     updateItemTable(); // Refresh table
                     updateCategoryTree(); // Refresh tree
-                    statusLabel.setText("Item added successfully: " + modelName);
+                    statusTextArea.setText("Item added successfully: " + modelName);
                     addItemDialog.dispose(); // Close dialog
 
                 } catch (NumberFormatException ex) {
@@ -698,7 +770,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 inventoryManager.importData(selectedFile);
                 updateCategoryTree();
                 updateItemTable();
-                statusLabel.setText("Data imported successfully from: " + selectedFile);
+                statusTextArea.setText("Data imported successfully from: " + selectedFile);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
                     "Error importing data: " + ex.getMessage(),
@@ -721,7 +793,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                     selectedFile += ".csv";
                 }
                 inventoryManager.exportData(selectedFile);
-                statusLabel.setText("Data exported successfully to: " + selectedFile);
+                statusTextArea.setText("Data exported successfully to: " + selectedFile);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
                     "Error exporting data: " + ex.getMessage(),
@@ -737,10 +809,26 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         itemTableModel.setRowCount(0);
         // Get data from inventoryManager and add to table model
         List<Item> items = inventoryManager.getInventoryItems();
+        // Category-based restock alerts
+        Map<String, Integer> restockCount = new HashMap<>();
         for (Item item : items) {
             itemTableModel.addRow(new Object[]{item.getModelNumber(), item.getModelName(), item.getModelPrice(), item.getItemQuantity(), item.getItemCategory()});
+            if (item.getItemQuantity() < 5) { // Restock threshold
+                String category = item.getItemCategory();
+                restockCount.put(category, restockCount.getOrDefault(category, 0) + 1);
+            }
         }
-         statusLabel.setText("Inventory loaded.");
+        StringBuilder restockAlerts = new StringBuilder();
+        for (Map.Entry<String, Integer> entry : restockCount.entrySet()) {
+            restockAlerts.append("Restock needed in category: ")
+                         .append(entry.getKey())
+                         .append(" (" + entry.getValue() + " item(s) low)\n");
+        }
+        if (restockAlerts.length() > 0) {
+            restockTextArea.setText(restockAlerts.toString());
+        } else {
+            restockTextArea.setText("");
+        }
     }
 
     // Method to update the category tree
