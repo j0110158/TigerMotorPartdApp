@@ -1,83 +1,84 @@
-# Tiger Motor Parts Inventory Management System
+# Tiger Motorhub App - Inventory Management System
 
-A comprehensive inventory management system for Tiger Motor Parts, now featuring a Java Swing Graphical User Interface.
+Desktop inventory management application (Java Swing).
 
-## Features
+## Key Features
 
-- **Modern Swing GUI**
-  - Resizable window with standard Windows controls.
-  - Title: "TIGER MOTORHUB APP".
-  - Minimum size: 1024x600.
-  - Category tree for easy navigation.
-  - Searchable and sortable item table.
-  - Right-click context menu on table items (Edit, Remove).
-  - Status bar displaying application status.
+### 1. Intuitive User Interface (GUI)
+*   **Modern Design**: Clean Swing UI.
+*   **Split Pane Layout**: Categories and items side-by-side.
+*   **Search and Filter**: Search/filter by model, name, category.
+*   **Right-click Context Menu**: Item edit/remove access.
+*   **Status Bar**: Real-time feedback.
 
-- **Inventory Management**
-  - Add new items via dialog.
-  - Edit existing items via dialog.
-  - Remove selected items.
-  - Utilizes existing `InventoryMgt` backend logic.
-  - Item quantity is fixed at 1 as per current logic.
+### 2. Comprehensive Inventory Management
+*   **Add Items**: Dialog for new items.
+*   **Edit Items**: Modify existing items.
+*   **Remove Items**: Delete items with robust error handling.
+    *   **Fix for "Error removing item: Amount cannot be negative"**: Corrected quantity logic.
+*   **Backend Logic**: Uses `InventoryMgt`.
+*   **Fixed Item Quantity**: Quantity fixed at 1.
 
-- **Category Management**
-  - Categories displayed in a hierarchical tree view.
-  - Automatic category creation when adding items.
-  - Filtering items based on selected category in the tree.
+### 3. Smart Stock Management
+*   **Low Stock Notifications**: Real-time low stock alerts.
+*   **Configurable Threshold**: User-set low stock quantity via Settings.
 
-- **Data Management**
-  - Import/Export inventory data to CSV files.
-  - View transaction logs in a dedicated dialog.
-  - Data persistence handled by the backend (`InventoryMgt`).
+### 4. Financial Overview
+*   **Cumulative Worth**: Displays total inventory value.
 
-- **Search and Filter**
-  - Search items by model number, name, or category.
-  - Filter items by selecting a category in the tree.
+### 5. Robust Data Management
+*   **Automatic Data Persistence**: Inventory/logs saved to `inventory_data.csv`.
+*   **Configurable Data Path**: User sets `inventory_data.csv` location.
+*   **Transaction Logging**: Detailed action log via viewer.
+*   **No Explicit Import/Export**: Automatic management only.
+
+### 6. Category Management
+*   **Hierarchical Tree View**: Organized categories.
+*   **Automatic Creation**: Categories created on item addition.
+*   **Filtering**: Filter items by selected category.
+
+## Application Features
+
+- Settings Menu: Access options for low stock threshold and data folder path.
+- Inventory Management: Add, edit, and remove items.
+- Search & Filter: Find items by various criteria and filter by category.
+- Restock Alerts: Notifications for low-stock items.
+- Transaction Log: View a history of inventory operations.
+- **New UI Theme**: Implemented a modern, consistent dark color palette using `UIManager` properties to ensure a cohesive look.
 
 ## Keyboard Shortcuts
 
-- `Ctrl+N`: Add new item
-- `F2`: Edit selected item
-- `Delete`: Remove selected item
-- `Ctrl+I`: Import data
-- `Ctrl+E`: Export data
-- `Ctrl+L`: View transaction log
+- `Ctrl+N`: Add item
+- `F2`: Edit item
+- `Delete`: Remove item
+- `Ctrl+L`: View log
 - `F5`: Refresh view
-- `Alt+X`: Exit application
+- `Alt+X`: Exit app
 
 ## Requirements
 
-- Java Development Kit (JDK) 8 or higher.
-- 1024x600 minimum screen resolution.
+- Java Development Kit (JDK) 8+.
+- 1024x600 minimum resolution.
 
 ## Usage
 
-1. Ensure you have a JDK installed.
-2. Run the `Main.java` file from your IDE.
-3. The Swing GUI application will launch.
-4. Use the category tree, search bar, table context menu, and menu bar to manage inventory.
+1.  Install JDK.
+2.  Run `Main.java` from IDE.
+3.  GUI launches.
+4.  Manage inventory via UI.
 
 ## Project Structure Highlights
 
-- `Main.java`: Entry point for launching the Swing GUI.
-- `InventorySwingGUI.java`: Contains the Swing UI definition and event handling, interacting with `InventoryMgt`.
-- `InventoryMgt.java`: Core backend logic for inventory, category, and transaction management.
-- `Item.java`: Represents an inventory item.
-- `Category.java`: Represents an item category.
-- `Availability.java`: (Currently unused in the Swing GUI but remains in the backend).
-- `Console.java`: (Commented out) Original console-based interface.
-- `inventory_data.csv`: Default file for data persistence.
-- `transaction_log.csv`: File for storing transaction history.
-
-<!-- THINGS TO DO: (Leave this section for future tasks) -->
-<!-- - Add proper icons to menu items and buttons. -->
-<!-- - Implement more robust input validation in dialogs. -->
-<!-- - Enhance the appearance and layout further. -->
-<!-- - Consider multi-quantity items if required in the future. -->
-<!-- - Improve error handling and user feedback. -->
-<!-- - Add search/filter to the Transaction Log viewer. -->
-<!-- - Explore better ways to handle category management visually. -->
+- `Main.java`: App entry point.
+- `InventorySwingGUI.java`: Main GUI.
+- `InventoryMgt.java`: Core business logic.
+- `Item.java`: Item data model.
+- `Category.java`: Category data model.
+- `Availability.java`: Data persistence.
+- `Console.java`: (Commented out) Original CLI.
+- `inventory_data.csv`: Primary data file.
+- `logbook.csv`: Legacy log file.
 
 ## License
 
-This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
+Proprietary and confidential.

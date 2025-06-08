@@ -1,14 +1,9 @@
-CATEGORY DATA
-
-CATEGORY,Helmet,5
-CATEGORY,Side Gasket,2
-CATEGORY,Knuckle Bearing,3
-CATEGORY,Oil Seal,3
-CATEGORY,Ignition Coil,2
-CATEGORY,Ignition Switch,1
-
-ITEM DATA
-
+CATEGORY,Helmet
+CATEGORY,Side Gasket
+CATEGORY,Knuckle Bearing
+CATEGORY,Oil Seal
+CATEGORY,Ignition Coil
+CATEGORY,Ignition Switch
 ITEM,7204,Helmet 103,300.0,1,Helmet
 ITEM,9603,Side Gasket 9000,200.0,1,Side Gasket
 ITEM,8190,Aura Knuckle Bearing Set HKZ/NP,100.0,1,Knuckle Bearing
@@ -24,10 +19,7 @@ ITEM,3933,Moto Helmet Fullface Shoe (BLK),500.0,1,Helmet
 ITEM,8744,Barako/BC175 IGNITION COIL,130.0,1,Ignition Coil
 ITEM,10777,Crypton Ignition Coil,135.0,1,Ignition Coil
 ITEM,9436,Wave100R Ignition Switch HK2,115.0,1,Ignition Switch
-ITEM,999,Test,100000.0,1,Helmet
-
-LOG DATA
-
+ITEM,999,Test,100.0,1,Helmet
 LOG,2025-06-01 16:16:00,ADD,Helmet 103,7204,1,Helmet
 LOG,2025-06-01 16:16:49,ADD,Side Gasket 9000,9603,1,Side Gasket
 LOG,2025-06-01 20:00:34,ADD,Aura Knuckle Bearing Set HKZ/NP,8190,1,Knuckle Bearing
@@ -55,3 +47,4 @@ LOG,2025-06-06 16:43:04,REMOVE,Test,999,1,Helmet
 LOG,2025-06-06 16:43:10,REMOVE,Test,999,1,Helmet
 LOG,2025-06-06 16:43:25,REMOVE,Test,999,1,Helmet
 LOG,2025-06-06 17:40:55,REMOVE,Test,999,1,Helmet
+LOG,2025-06-08 13:45:14,REMOVE,Test,999,1,Helmet

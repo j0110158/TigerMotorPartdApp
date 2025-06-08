@@ -1,77 +1,112 @@
-# Java Code Overview
+# Tiger Motorhub App - Java Code Structure
 
-This document provides an overview of the key Java files in the Tiger Motor Parts Inventory Management System and their primary functions and methods.
+This document outlines the core Java files that constitute the Tiger Motorhub Inventory Management application, detailing their responsibilities and how they interact.
 
-## `Main.java`
+## Core Application Modules
 
-This is the application's entry point. Its main responsibility is to initialize and launch the user interface.
+### `InventorySwingGUI.java`
+*   **Purpose**: This is the main graphical user interface (GUI) class of the application. It extends `JFrame` and sets up the entire visual layout, including menus, tables, trees, search bars, and status areas.
+*   **Key Responsibilities**:
+    *   Initializes and displays all Swing components.
+    *   Handles user interactions (button clicks, menu selections, table actions, tree selections).
+    *   Coordinates with `InventoryMgt` to display and update inventory data.
+    *   Manages dialogs for adding, editing, and setting inventory parameters.
+    *   Displays cumulative inventory worth and restock alerts.
+*   **Recent Changes**: 
+    *   "File" menu renamed to "Settings".
+    *   Added menu options for "Set Low Stock Threshold" and "Set Data File Path".
+    *   Removed explicit "Import Data" and "Export Data" menu items.
+    *   Integrated display for total inventory worth.
+    *   Updated to communicate with `InventoryMgt` for managing low stock threshold and data file paths.
 
-- `main(String[] args)`: The standard main method. It uses `SwingUtilities.invokeLater` to ensure the Swing GUI is created and run on the Event Dispatch Thread (EDT), which is the standard practice for Swing applications.
+### `InventoryMgt.java`
+*   **Purpose**: This class acts as the central business logic and data manager for the inventory. It maintains lists of `Item` and `Category` objects and provides methods for inventory operations.
+*   **Key Responsibilities**:
+    *   Manages the collection of `Item` and `Category` objects.
+    *   Provides methods for adding, removing, searching, and updating inventory items and categories.
+    *   Manages transaction logging.
+    *   Holds the application-wide `lowStockThreshold` and `dataFilePath`.
+    *   Delegates data persistence operations (reading/writing to file) to the `Availability` class.
+    *   Loads and saves data through the `Availability` instance.
+*   **Recent Changes**:
+    *   Fixed the "Error removing item: Amount cannot be negative" by correctly using `category.decreaseQuantity()`.
+    *   Introduced configurable `lowStockThreshold` with getter/setter.
+    *   Introduced configurable `dataFilePath` with getter/setter.
+    *   Refactored data persistence methods (`importData`, `exportData`, `saveData`, `readTransactionLogsFromFile`) to use the `Availability` class.
+    *   Constructor now handles initial data loading using `Availability`.
 
-## `InventorySwingGUI.java`
+### `Availability.java`
+*   **Purpose**: This class is dedicated to handling data persistence (reading from and writing to files) and general availability checks. It acts as a utility class for file I/O operations related to the inventory.
+*   **Key Responsibilities**:
+    *   Manages the `dataFilePath` for inventory data and transaction logs.
+    *   Provides methods to `readDataFromFile()` and `writeDataToFile()` for general inventory data.
+    *   Provides methods to `readTransactionLogsFromFile()` and `writeTransactionLogsToFile()` specifically for transaction logs.
+    *   Ensures the data file exists, creating it if necessary.
+    *   Includes utility methods for checking item availability and displaying restock warnings.
+*   **Recent Changes**:
+    *   Refactored and moved data persistence methods from `InventoryMgt.java` into this class.
+    *   Constructor now takes `dataFilePath` and ensures file creation.
+    *   Added `setDataFilePath()` to update the active data file path, which also ensures the new file path's file exists.
 
-This file contains the implementation of the Swing-based Graphical User Interface (GUI). It handles all user interactions and displays inventory data, interacting with the `InventoryMgt` class for data operations.
+## Data Models
 
-- `InventorySwingGUI()`: The constructor sets up the main JFrame window, including its title, default close operation, size, layout (`BorderLayout`), and the system look and feel. It initializes UI components like the menu bar, split pane, category tree (`JTree`), item table (`JTable`), search field (`JTextField`), and status label (`JLabel`). It also sets up listeners for tree selections and button/menu actions and loads initial data.
-- `createMenuBar()`: A helper method to construct the application's menu bar, adding File, Edit, and View menus with various JMenuItems (Import, Export, Exit, Add Item, Remove Item, Edit Item, Refresh, Transaction Log). Accelerators (keyboard shortcuts) and tooltips are configured here.
-- `actionPerformed(ActionEvent e)`: Implements the `ActionListener` interface. This central method receives action events from menu items and buttons and delegates handling based on the action command string (e.g., "Add Item", "Search", "Exit").
-- `filterItems()`: Filters the items displayed in the `itemTable` based on the text entered in the `searchField`. It searches across model number, model name, and category.
-- `filterItemsByCategory(String categoryName)`: Filters the items displayed in the `itemTable` to show only items belonging to the specified category. If "All Categories" is selected, it shows all items.
-- `removeSelectedItem()`: Handles the removal of the item currently selected in the `itemTable`. It prompts the user for confirmation, calls the `inventoryManager` to remove the item, logs the transaction, saves data, and updates the UI.
-- `editSelectedItem()`: Opens a modal `JDialog` allowing the user to modify the details of the item currently selected in the `itemTable`. It retrieves current item data, populates text fields, and on saving, updates the item via `inventoryManager`, saves data, and refreshes the UI.
-- `showAddItemDialog()`: Opens a modal `JDialog` for adding a new item. It collects input for model number, name, price, and category. It includes basic validation and prompts to create a new category if the entered one doesn't exist. Upon saving, it adds the item via `inventoryManager`, logs the transaction, saves data, and updates the UI.
-- `showTransactionLogDialog()`: Opens a modal `JDialog` to display the transaction history read from the log file (`transaction_log.csv`) in a `JTable`.
-- `importData()`: Opens a `JFileChooser` to allow the user to select a CSV file for importing inventory data using `inventoryManager.importData()`. Updates the UI and status label upon completion or error.
-- `exportData()`: Opens a `JFileChooser` for the user to specify a location and filename to save the current inventory data as a CSV file using `inventoryManager.exportData()`. Updates the status label upon completion or error.
-- `updateItemTable()`: Refreshes the `itemTable` by clearing its current data and repopulating it with the latest inventory items from `inventoryManager.getInventoryItems()`.
-- `updateCategoryTree()`: Refreshes the `categoryTree` by clearing the existing tree model and rebuilding it based on the current categories obtained from `inventoryManager.getItemCategories()`.
+### `Item.java`
+*   **Purpose**: Represents a single inventory item. It is a simple data class holding attributes of a motorcycle part.
+*   **Key Attributes**: Model Number, Model Name, Price, Quantity (fixed at 1 as per application logic), Category.
 
-## `InventoryMgt.java`
+### `Category.java`
+*   **Purpose**: Represents a category for inventory items. It manages the name and cumulative quantity of items within that category.
+*   **Key Responsibilities**:
+    *   Stores `categoryName` and `categoryQuantity`.
+    *   Provides methods to `increaseQuantity()` and `decreaseQuantity()`.
+    *   Includes logic to check if a category `needsRestock()`.
+*   **Role in Bug Fix**: The `decreaseQuantity` method in this class was crucial for resolving the "Amount cannot be negative" error, as it safely handles quantity decrements without throwing an error when the quantity would otherwise go below zero.
 
-This class contains the core business logic for managing the inventory, categories, and transactions. It handles data loading, saving, adding, removing, searching, and category management.
+## Other Relevant Files
 
-- `InventoryMgt()`: Constructor initializes the internal data structures (`inventoryItems`, `itemCategories`, `transactionLogs`) and sets up file paths.
-- `importData(String filePath)`: Reads inventory, category, and transaction log data from a specified CSV file. It parses the data based on type prefixes (CATEGORY, ITEM, LOG) and populates the respective internal lists. Includes error handling for file not found.
-- `exportData(String filePath)`: Writes the current inventory, category, and transaction log data to a specified CSV file in a structured format, using type prefixes.
-- `saveData()`: Saves the current state of inventory, categories, and transaction logs to the default data files (`inventory_data.csv` and `transaction_log.csv`).
-- `addItem(Item item)`: Adds a new `Item` to the `inventoryItems` list and updates the quantity of its corresponding category.
-- `removeItemByNumber(String modelNumber)`: Removes an item from the `inventoryItems` list based on its model number and updates the quantity of its category.
-- `removeItemByCategory(String categoryName)`: Removes all items belonging to a specific category.
-- `searchItem(String searchTerm)`: Searches for an item by model number or model name.
-- `addCategory(String categoryName, int initialQuantity)`: Adds a new `Category` if it doesn't already exist.
-- `removeCategory(String categoryName)`: Removes a category and all associated items.
-- `findCategoryByName(String categoryName)`: Finds and returns a `Category` object by its name.
-- `viewCategories()`: (Used in Console version, not directly in Swing GUI) Prints the list of categories to the console.
-- `getInventoryItems()`: Returns the list of all `Item` objects.
-- `getItemCategories()`: Returns the list of all `Category` objects.
-- `logTransaction(String action, String modelName, String modelNumber, int quantity)`: Records a transaction event (ADD, REMOVE, EDIT) with a timestamp and relevant item details to the `transactionLogs` list.
-- `readTransactionLogsFromFile()`: Reads and returns the list of transaction log entries from the `transaction_log.csv` file.
-- `dataFileExists()`: Checks if the default data file exists.
-- `createDataFile()`: Creates an empty default data file if it doesn't exist.
+### `Console.java`
+*   **Purpose**: (Presumed) Likely provides a text-based or command-line interface for interacting with the inventory management system, potentially for testing or alternative use cases, separate from the Swing GUI.
 
-## `Item.java`
+### `main.java`
+*   **Purpose**: (Presumed) Often contains the `main` method which serves as the entry point for the entire application, initiating the `InventorySwingGUI` or other components.
 
-A simple class representing an inventory item.
+### Data Files
+*   `inventory_data.csv`: The primary data file for inventory items, categories, and transaction logs. Its path is now configurable via the UI.
+*   `inventory.csv`: (Legacy) Likely an older or test inventory file, not actively used by the current application logic for data persistence.
+*   `logbook.csv`: (Legacy) Likely an older or test transaction log file, not actively used by the current application logic for data persistence, as logs are now stored in `inventory_data.csv`.
+*   `saved_items.csv`: (Legacy) Likely an older or test file for saved items, not actively used by the current application logic for data persistence.
 
-- Constructor: Initializes an `Item` with model details, quantity, and category.
-- Getters and Setters: Provide access to the item's properties (`modelPrice`, `modelName`, `modelNumber`, `itemQuantity`, `itemCategory`). Note that `itemQuantity` is effectively fixed at 1 in the current application logic.
+This structure ensures a separation of concerns, making the application more maintainable and scalable. The GUI handles presentation, `InventoryMgt` manages business logic, and `Availability` handles data persistence, while `Item` and `Category` serve as fundamental data models.
 
-## `Category.java`
+### UI Theming
 
-A simple class representing an item category.
+**Consistent Dark Theme Implementation**
 
-- Constructor: Initializes a `Category` with a name and quantity.
-- Getters and Setters: Provide access to the category's properties (`categoryName`, `categoryQuantity`).
-- `addItemQuantity(int quantity)`: Increases the category's quantity.
-- `removeItemQuantity(int quantity)`: Decreases the category's quantity.
+The application's UI now features a consistent dark theme, implemented by configuring Java Swing's `UIManager` properties. This approach ensures that the Nimbus Look and Feel (L&F) renders all components with the desired dark palette, maintaining visual consistency across the entire application.
 
-## `Availability.java`
+**Why `UIManager.put()` was used:**
 
-This class (primarily used in the Console version) provides basic availability checking and restock warnings based on item and category quantities.
+Previously, attempts to apply a dark theme by directly setting `setBackground()` and `setForeground()` on individual components led to an inconsistent and visually unappealing UI. This was due to conflicts with the Nimbus L&F's internal rendering logic for borders, gradients, and other visual elements. By using `UIManager.put()`, we instruct Nimbus to use the specified colors when drawing its components, thereby ensuring that all UI elements adhere to the new theme cohesively.
 
-- `checkAvailability(int quantity)`: Returns true if the quantity is greater than 0.
-- `displayRestockWarning(String itemName, int itemQuantity, int categoryQuantity, String categoryName)`: (Used in Console version) Displays a restock warning based on category quantity.
+**Key `UIManager` properties configured for the dark theme:**
 
-## `Console.java` (Commented Out)
+*   `control`: General background color for controls.
+*   `nimbusBase`: Primary color for interactive elements.
+*   `nimbusBlueGrey`: Secondary background color.
+*   `text`: Default text color for most components.
+*   `nimbusLightBackground`: Overall application background.
+*   `nimbusFocus`: Color for focused components.
+*   `Panel.background`, `Label.foreground`, `TitledBorder.titleColor`
+*   `Button.background`, `Button.foreground`, `Button.light`, `Button.highlight`
+*   `TextField.background`, `TextField.foreground`, `TextField.caretForeground`
+*   `TextArea.background`, `TextArea.foreground`
+*   `TextPane.background`, `TextPane.foreground`
+*   `Table.background`, `Table.foreground`, `Table.selectionBackground`, `Table.selectionForeground`, `Table.gridColor`
+*   `TableHeader.background`, `TableHeader.foreground`
+*   `Tree.background`, `Tree.foreground`, `Tree.selectionBackground`, `Tree.selectionForeground`, `Tree.textBackground`, `Tree.textForeground`, `Tree.hash`
+*   `MenuBar.background`, `MenuBar.foreground`, `Menu.background`, `Menu.foreground`, `MenuItem.background`, `MenuItem.foreground`, `PopupMenu.background`
+*   `ScrollPane.background`
+*   `SplitPane.background`, `SplitPaneDivider.draggingColor`
+*   `OptionPane.background`, `OptionPane.messageForeground`, `OptionPane.buttonAreaBackground`
 
-This file contained the original command-line interface for the application. It is now commented out and not used by the `Main` class when launching the Swing GUI.
+This approach ensures that all UI elements, including complex components like tables and trees, seamlessly integrate with the new dark theme, avoiding visual conflicts and providing a unified user experience.

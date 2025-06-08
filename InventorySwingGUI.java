@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.plaf.basic.*;
+import java.io.File; // Import File class
 
 public class InventorySwingGUI extends JFrame implements ActionListener {
     private InventoryMgt inventoryManager;
@@ -35,17 +36,13 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
     private JTextArea statusTextArea;
     private JTextArea restockTextArea;
     private JScrollPane restockScrollPane;
+    private JLabel totalWorthLabel; // New JLabel for cumulative worth
+    private JButton searchButton; // Declare as class member
+    private JButton clearButton; // Declare as class member
 
     public InventorySwingGUI() {
         // Initialize inventory manager
         inventoryManager = new InventoryMgt();
-
-        // Set up the main window
-        setTitle("TIGER MOTORHUB APP");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1600, 900); // Default size 1600x900
-        setMinimumSize(new Dimension(1024, 600));
-        // Standard Windows controls (minimize, maximize, close) are default for JFrame
 
         // Set look and feel to system default for Aero feel
         try {
@@ -59,8 +56,95 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
             e.printStackTrace();
         }
 
+        // Define a dark color palette for UIManager
+        Color darkBackground = new Color(45, 45, 48); // Main background
+        Color darkPanel = new Color(60, 63, 65); // Panel backgrounds
+        Color darkText = new Color(240, 240, 240); // Light text color
+        Color darkControl = new Color(70, 73, 75); // General control background
+        Color darkHighlight = new Color(75, 110, 175); // Highlight/selection color
+        Color darkBorder = new Color(90, 93, 95); // Border color
+        Color darkInput = new Color(40, 40, 40); // Input field background
+
+        // Set UIManager defaults for a consistent dark theme
+        UIManager.put("control", darkPanel); // General background for controls
+        UIManager.put("info", darkPanel); // Info background (tooltips etc.)
+        UIManager.put("nimbusBase", darkHighlight); // Primary interactive elements
+        UIManager.put("nimbusBlueGrey", darkPanel); // Secondary background
+        UIManager.put("text", darkText); // Default text color
+        UIManager.put("nimbusLightBackground", darkBackground); // Overall background
+        UIManager.put("nimbusFocus", darkHighlight); // Focus color
+
+        // Component-specific colors
+        UIManager.put("Panel.background", darkBackground);
+        UIManager.put("Label.foreground", darkText);
+        UIManager.put("TitledBorder.titleColor", darkText);
+
+        // Buttons
+        UIManager.put("Button.background", darkControl);
+        UIManager.put("Button.foreground", darkText);
+        UIManager.put("Button.light", darkBorder);
+        UIManager.put("Button.highlight", darkControl);
+
+        // Text fields, areas, panes
+        UIManager.put("TextField.background", darkInput);
+        UIManager.put("TextField.foreground", darkText);
+        UIManager.put("TextField.caretForeground", darkText);
+        UIManager.put("TextArea.background", darkInput);
+        UIManager.put("TextArea.foreground", darkText);
+        UIManager.put("TextPane.background", darkInput);
+        UIManager.put("TextPane.foreground", darkText);
+
+        // Tables
+        UIManager.put("Table.background", darkInput);
+        UIManager.put("Table.foreground", darkText);
+        UIManager.put("Table.selectionBackground", darkHighlight);
+        UIManager.put("Table.selectionForeground", darkText);
+        UIManager.put("Table.gridColor", darkBorder);
+
+        // Table Headers
+        UIManager.put("TableHeader.background", darkControl);
+        UIManager.put("TableHeader.foreground", darkText);
+
+        // Trees
+        UIManager.put("Tree.background", darkPanel);
+        UIManager.put("Tree.foreground", darkText);
+        UIManager.put("Tree.selectionBackground", darkHighlight);
+        UIManager.put("Tree.selectionForeground", darkText);
+        UIManager.put("Tree.textBackground", darkPanel); // For text background when not selected
+        UIManager.put("Tree.textForeground", darkText);
+        UIManager.put("Tree.hash", darkBorder); // Lines connecting nodes
+
+        // Menus
+        UIManager.put("MenuBar.background", darkControl);
+        UIManager.put("MenuBar.foreground", darkText);
+        UIManager.put("Menu.background", darkControl);
+        UIManager.put("Menu.foreground", darkText);
+        UIManager.put("MenuItem.background", darkControl);
+        UIManager.put("MenuItem.foreground", darkText);
+        UIManager.put("PopupMenu.background", darkControl);
+
+        // Scroll Panes
+        UIManager.put("ScrollPane.background", darkBackground);
+
+        // Split Pane Divider
+        UIManager.put("SplitPane.background", darkBorder);
+        UIManager.put("SplitPaneDivider.draggingColor", darkHighlight);
+
+        // Dialogs
+        UIManager.put("OptionPane.background", darkPanel);
+        UIManager.put("OptionPane.messageForeground", darkText);
+        UIManager.put("OptionPane.buttonAreaBackground", darkPanel);
+
+        // Set up the main window
+        setTitle("TIGER MOTORHUB APP");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1600, 900); // Default size 1600x900
+        setMinimumSize(new Dimension(1024, 600));
+        // Standard Windows controls (minimize, maximize, close) are default for JFrame
+
         // Create the main layout
         setLayout(new BorderLayout());
+        // getContentPane().setBackground(mainBg); // This can be removed or left as is if Nimbus handles it
 
         // Create menu bar
         JMenuBar menuBar = createMenuBar();
@@ -72,8 +156,6 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         // Left side - Category tree
         JPanel categoryPanel = new JPanel(new BorderLayout());
         categoryPanel.setBorder(null);
-        Color bg = new Color(240, 240, 240);
-        categoryPanel.setBackground(bg);
         categoryTree = new JTree();
         categoryTree.setShowsRootHandles(true);
         categoryTree.setRootVisible(true);
@@ -103,7 +185,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 return new BasicSplitPaneDivider(this) {
                     @Override
                     public void paint(Graphics g) {
-                        g.setColor(new Color(238, 238, 240));
+                        g.setColor(darkBorder); // Set divider color
                         g.fillRect(0, 0, getSize().width, getSize().height);
                         super.paint(g);
                     }
@@ -116,7 +198,6 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         // Right side - Item table and search
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBorder(BorderFactory.createTitledBorder("Inventory Items"));
-        itemPanel.setBackground(bg);
 
         // Search bar with improved layout
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
@@ -125,18 +206,25 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         searchField.setToolTipText("Enter model number, name, or category to search");
         searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        JButton searchButton = new JButton("Search");
+        searchButton = new JButton("Search"); // Initialize here
         searchButton.setToolTipText("Search inventory items");
         searchButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JButton clearButton = new JButton("Clear");
+        clearButton = new JButton("Clear"); // Initialize here
         clearButton.setToolTipText("Clear search and show all items");
         clearButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        searchPanel.add(new JLabel("Search:"));
+        JLabel searchLabel = new JLabel("Search:");
+        searchPanel.add(searchLabel);
         searchPanel.add(searchField);
         searchPanel.add(searchButton);
         searchPanel.add(clearButton);
+
+        // Add JLabel for cumulative worth to the search panel
+        totalWorthLabel = new JLabel("Total Inventory Worth: Php0.00"); // Initial text
+        totalWorthLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        totalWorthLabel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 0)); // Add some padding
+        searchPanel.add(totalWorthLabel);
 
         // Add action listeners for search
         searchField.addActionListener(this);
@@ -238,7 +326,6 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         restockTextArea.setLineWrap(true);
         restockTextArea.setWrapStyleWord(true);
         restockTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        restockTextArea.setBackground(bg);
         restockTextArea.setBorder(BorderFactory.createTitledBorder("Restock Alerts"));
 
         restockScrollPane = new JScrollPane(restockTextArea);
@@ -252,14 +339,14 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
             // Icon not found, continue without it
         }
 
-        // Load initial data and update UI
-        inventoryManager.importData(InventoryMgt.DATA_FILE); // Load existing data
+        // Load initial data and update UI - InventoryMgt constructor now handles initial load
+        // inventoryManager.importData(InventoryMgt.DATA_FILE); // Removed
         updateCategoryTree();
         updateItemTable();
 
-        // For the whole window
-        Color mainBg = new Color(100, 100, 100);
-        Color cardBg = new Color(100, 100, 100); 
+        // For the whole window - remove previous color settings
+        // Color mainBg = new Color(100, 100, 100);
+        // Color cardBg = new Color(100, 100, 100);
 
         // getContentPane().setBackground(mainBg);
         // categoryPanel.setBackground(mainBg);
@@ -273,43 +360,69 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
+        // menuBar.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
 
-        // File menu
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.setMnemonic('F');
+        // Settings menu (formerly File)
+        JMenu settingsMenu = new JMenu("Settings");
+        settingsMenu.setMnemonic('S');
+        // settingsMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
-        JMenuItem importItem = new JMenuItem("Import Data"); // Add icon later
-        importItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK));
-        importItem.setToolTipText("Import inventory data from a CSV file");
+        JMenuItem setLowStockThresholdItem = new JMenuItem("Set Low Stock Threshold");
+        setLowStockThresholdItem.setToolTipText("Set the quantity threshold for low stock notifications");
+        // setLowStockThresholdItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // setLowStockThresholdItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
+        settingsMenu.add(setLowStockThresholdItem);
 
-        JMenuItem exportItem = new JMenuItem("Export Data"); // Add icon later
-        exportItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
-        exportItem.setToolTipText("Export inventory data to a CSV file");
+        // New Data Path menu
+        JMenu dataPathMenu = new JMenu("Data Path ...");
+        dataPathMenu.setToolTipText("Manage inventory data file location");
+        // dataPathMenu.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // dataPathMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
+        settingsMenu.add(dataPathMenu);
+
+        JMenuItem setDataFolderPathItem = new JMenuItem("Set Data Folder Path");
+        setDataFolderPathItem.setToolTipText("Set the folder path for inventory data");
+        // setDataFolderPathItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // setDataFolderPathItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
+        dataPathMenu.add(setDataFolderPathItem);
+
+        JMenuItem viewDataFolderPathSummaryItem = new JMenuItem("View Folder Path Summary");
+        viewDataFolderPathSummaryItem.setToolTipText("View the current folder path of inventory data");
+        // viewDataFolderPathSummaryItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // viewDataFolderPathSummaryItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
+        dataPathMenu.add(viewDataFolderPathSummaryItem);
+
+        settingsMenu.addSeparator();
 
         JMenuItem exitItem = new JMenuItem("Exit"); // Add icon later
         exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_DOWN_MASK));
         exitItem.setToolTipText("Exit the application");
-
-        fileMenu.add(importItem);
-        fileMenu.add(exportItem);
-        fileMenu.addSeparator();
-        fileMenu.add(exitItem);
+        // exitItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // exitItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
+        settingsMenu.add(exitItem);
 
         // Edit menu
         JMenu editMenu = new JMenu("Edit");
         editMenu.setMnemonic('E');
+        // editMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         JMenuItem addItem = new JMenuItem("Add Item"); // Add icon later
         addItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
         addItem.setToolTipText("Add a new item to the inventory");
+        // addItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // addItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         JMenuItem removeItem = new JMenuItem("Remove Item"); // Add icon later
         removeItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
         removeItem.setToolTipText("Remove the selected item from the inventory");
+        // removeItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // removeItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         JMenuItem editItem = new JMenuItem("Edit Item"); // Add icon later
         editItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0));
         editItem.setToolTipText("Edit the selected item's details");
+        // editItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // editItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         editMenu.add(addItem);
         editMenu.add(removeItem);
@@ -318,21 +431,27 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         // View menu
         JMenu viewMenu = new JMenu("View");
         viewMenu.setMnemonic('V');
+        // viewMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         JMenuItem refreshItem = new JMenuItem("Refresh"); // Add icon later
         refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
         refreshItem.setToolTipText("Refresh the inventory view");
+        // refreshItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // refreshItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         JMenuItem transactionLogItem = new JMenuItem("Transaction Log"); // Add icon later
         transactionLogItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
         transactionLogItem.setToolTipText("View the transaction history");
+        // transactionLogItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
+        // transactionLogItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
 
         viewMenu.add(refreshItem);
         viewMenu.add(transactionLogItem);
 
         // Add action listeners for all menu items
-        importItem.addActionListener(this);
-        exportItem.addActionListener(this);
+        setLowStockThresholdItem.addActionListener(this);
+        setDataFolderPathItem.addActionListener(this);
+        viewDataFolderPathSummaryItem.addActionListener(this);
         exitItem.addActionListener(this);
         addItem.addActionListener(this);
         removeItem.addActionListener(this);
@@ -340,7 +459,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         refreshItem.addActionListener(this);
         transactionLogItem.addActionListener(this);
 
-        menuBar.add(fileMenu);
+        menuBar.add(settingsMenu);
         menuBar.add(editMenu);
         menuBar.add(viewMenu);
 
@@ -370,11 +489,14 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 updateItemTable();
                 statusTextArea.setText("Inventory refreshed.");
                 break;
-            case "Import Data":
-                importData();
+            case "Set Low Stock Threshold":
+                showSetLowStockThresholdDialog();
                 break;
-            case "Export Data":
-                exportData();
+            case "Set Data Folder Path":
+                showSetDataFilePathDialog();
+                break;
+            case "View Folder Path Summary":
+                showDataFolderPathSummary();
                 break;
             case "Transaction Log":
                 showTransactionLogDialog();
@@ -639,12 +761,41 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         gbc.gridy++;
         addItemDialog.add(itemCategoryField, gbc);
 
+        addItemDialog.getContentPane().setBackground(new Color(60, 63, 65)); // Set dialog background
+        modelNumberField.setBackground(new Color(40, 40, 40));
+        modelNumberField.setForeground(new Color(240, 240, 240));
+        modelNumberField.setCaretColor(new Color(240, 240, 240));
+        modelNameField.setBackground(new Color(40, 40, 40));
+        modelNameField.setForeground(new Color(240, 240, 240));
+        modelNameField.setCaretColor(new Color(240, 240, 240));
+        modelPriceField.setBackground(new Color(40, 40, 40));
+        modelPriceField.setForeground(new Color(240, 240, 240));
+        modelPriceField.setCaretColor(new Color(240, 240, 240));
+        itemQuantityField.setBackground(new Color(40, 40, 40));
+        itemQuantityField.setForeground(new Color(240, 240, 240));
+        itemQuantityField.setCaretColor(new Color(240, 240, 240));
+        itemCategoryField.setBackground(new Color(40, 40, 40));
+        itemCategoryField.setForeground(new Color(240, 240, 240));
+        itemCategoryField.setCaretColor(new Color(240, 240, 240));
+
+        // Set label colors in the dialog
+        for (Component comp : addItemDialog.getContentPane().getComponents()) {
+            if (comp instanceof JLabel) {
+                ((JLabel) comp).setForeground(new Color(240, 240, 240));
+            }
+        }
+
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
+        saveButton.setBackground(new Color(75, 110, 175)); // Example button color
+        saveButton.setForeground(new Color(240, 240, 240));
+        cancelButton.setBackground(new Color(175, 75, 75)); // Example button color
+        cancelButton.setForeground(new Color(240, 240, 240));
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(saveButton);
         buttonPanel.add(cancelButton);
+        buttonPanel.setBackground(new Color(60, 63, 65)); // Set button panel background
 
         gbc.gridx = 0;
         gbc.gridy++;
@@ -758,49 +909,64 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         logDialog.setVisible(true);
     }
 
-    // Method to handle import data
-    private void importData() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
+    // Method to show dialog for setting low stock threshold
+    private void showSetLowStockThresholdDialog() {
+        String input = (String) JOptionPane.showInputDialog(this, "Enter new low stock threshold:", "Set Low Stock Threshold", JOptionPane.QUESTION_MESSAGE, null, null, String.valueOf(inventoryManager.getLowStockThreshold()));
+        // Ensure the input dialog also follows the dark theme, if possible (often limited by L&F)
+        if (input != null && !input.trim().isEmpty()) {
             try {
-                String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
-                inventoryManager.importData(selectedFile);
-                updateCategoryTree();
-                updateItemTable();
-                statusTextArea.setText("Data imported successfully from: " + selectedFile);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this,
-                    "Error importing data: " + ex.getMessage(),
-                    "Import Error",
-                    JOptionPane.ERROR_MESSAGE);
+                int newThreshold = Integer.parseInt(input.trim());
+                if (newThreshold < 0) {
+                    JOptionPane.showMessageDialog(this, "Threshold cannot be negative.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                inventoryManager.setLowStockThreshold(newThreshold); // Update threshold in InventoryMgt
+                statusTextArea.setText("Low stock threshold set to: " + newThreshold);
+                updateItemTable(); // Refresh table to reflect new threshold
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid number format. Please enter an integer.", "Input Error", JOptionPane.WARNING_MESSAGE);
             }
         }
     }
 
-    // Method to handle export data
-    private void exportData() {
+    // Method to show dialog for setting data file path
+    private void showSetDataFilePathDialog() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
+        // Change to allow selecting directories only
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Select Inventory Data Folder");
 
-        int result = fileChooser.showSaveDialog(this);
+        int result = fileChooser.showOpenDialog(this); // Use showOpenDialog for selecting a folder
         if (result == JFileChooser.APPROVE_OPTION) {
+            String selectedFolder = fileChooser.getSelectedFile().getAbsolutePath();
+            
             try {
-                String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
-                if (!selectedFile.toLowerCase().endsWith(".csv")) {
-                    selectedFile += ".csv";
-                }
-                inventoryManager.exportData(selectedFile);
-                statusTextArea.setText("Data exported successfully to: " + selectedFile);
+                // Update data *folder* path in InventoryMgt
+                inventoryManager.setDataFilePath(selectedFolder); 
+                inventoryManager.loadData(); // Reload data from the new path
+                updateCategoryTree();
+                updateItemTable();
+                statusTextArea.setText("Inventory data folder path set to: " + selectedFolder + ". Data reloaded.");
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this,
-                    "Error exporting data: " + ex.getMessage(),
-                    "Export Error",
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error setting data folder path: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    // New method to show current data folder path summary
+    private void showDataFolderPathSummary() {
+        String currentFilePath = inventoryManager.getDataFilePath(); // This returns the full file path
+        File file = new File(currentFilePath);
+        String folderPath = file.getParent(); // Get the parent directory (folder path)
+
+        if (folderPath == null || folderPath.isEmpty()) {
+            folderPath = "(Default: Application's current working directory)";
+        }
+
+        JOptionPane.showMessageDialog(this, 
+            "Current Inventory Data Folder:\n" + folderPath, 
+            "Data Folder Path Summary", 
+            JOptionPane.INFORMATION_MESSAGE);
     }
 
     // Method to update the item table
@@ -811,13 +977,22 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         List<Item> items = inventoryManager.getInventoryItems();
         // Category-based restock alerts
         Map<String, Integer> restockCount = new HashMap<>();
+        double totalWorth = 0.0; // Variable to store cumulative worth
+
         for (Item item : items) {
             itemTableModel.addRow(new Object[]{item.getModelNumber(), item.getModelName(), item.getModelPrice(), item.getItemQuantity(), item.getItemCategory()});
-            if (item.getItemQuantity() < 5) { // Restock threshold
+            totalWorth += item.getModelPrice() * item.getItemQuantity(); // Calculate cumulative worth
+
+            int lowStockThreshold = inventoryManager.getLowStockThreshold(); // Use the threshold from InventoryMgt
+            if (item.getItemQuantity() < lowStockThreshold) {
                 String category = item.getItemCategory();
                 restockCount.put(category, restockCount.getOrDefault(category, 0) + 1);
             }
         }
+        // Update cumulative worth display (you'll need to add a JLabel for this)
+        // For now, let's put it in the status bar for demonstration
+        totalWorthLabel.setText("Total Inventory Worth: Php" + String.format("%.2f", totalWorth));
+
         StringBuilder restockAlerts = new StringBuilder();
         for (Map.Entry<String, Integer> entry : restockCount.entrySet()) {
             restockAlerts.append("Restock needed in category: ")

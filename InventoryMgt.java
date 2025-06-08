@@ -15,16 +15,49 @@ public class InventoryMgt {
     private List<Category> itemCategories;
     private List<String> transactionLogs;
     private Availability availabilityChecker;
+    private String dataFilePath; // This will now store the full file path
+    private int lowStockThreshold = 5; // Default low stock threshold
 
-    public static final String DATA_FILE = "inventory_data.csv";
-    private static final String UNCATEGORIZED = "Uncategorized";
+    private static final String INVENTORY_DATA_FILENAME = "inventory_data.csv"; // New constant
+    public static final String UNCATEGORIZED = "Uncategorized";
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public InventoryMgt() {
         inventoryItems = new ArrayList<>();
         itemCategories = new ArrayList<>();
         transactionLogs = new ArrayList<>();
-        availabilityChecker = new Availability();
+        // Default file path: current working directory + filename
+        this.dataFilePath = System.getProperty("user.dir") + File.separator + INVENTORY_DATA_FILENAME;
+        this.availabilityChecker = new Availability(this.dataFilePath); // Initialize Availability with full path
+        loadData(); // Load data from the default path
+    }
+
+    // New methods for low stock threshold
+    public int getLowStockThreshold() {
+        return lowStockThreshold;
+    }
+
+    public void setLowStockThreshold(int lowStockThreshold) {
+        if (lowStockThreshold < 0) {
+            throw new IllegalArgumentException("Low stock threshold cannot be negative.");
+        }
+        this.lowStockThreshold = lowStockThreshold;
+    }
+
+    // New methods for data file path
+    // This method now accepts a folderPath and constructs the full file path
+    public void setDataFilePath(String folderPath) {
+        if (folderPath == null || folderPath.trim().isEmpty()) {
+            throw new IllegalArgumentException("Folder path cannot be null or empty.");
+        }
+        // Construct the full file path from the selected folder
+        this.dataFilePath = folderPath + File.separator + INVENTORY_DATA_FILENAME;
+        this.availabilityChecker.setDataFilePath(this.dataFilePath); // Update Availability's full file path
+    }
+
+    // Getter for the current full data file path
+    public String getDataFilePath() {
+        return this.dataFilePath;
     }
 
     public List<Item> getInventoryItems() {
@@ -150,7 +183,11 @@ public class InventoryMgt {
         if (category == null) {
             throw new IllegalStateException("Category " + categoryName + " not found");
         }
-        category.increaseQuantity(quantityChange);
+        if (quantityChange > 0) {
+            category.increaseQuantity(quantityChange);
+        } else if (quantityChange < 0) {
+            category.decreaseQuantity(Math.abs(quantityChange)); // Use decreaseQuantity for negative changes
+        }
     }
 
     public void viewCategories() {
@@ -172,187 +209,128 @@ public class InventoryMgt {
     }
 
     public void importData(String filePath) {
-        System.out.println("Attempting to import data from " + filePath + "...");
+        List<String> rawData = availabilityChecker.readDataFromFile(filePath);
+        // Process raw data to populate inventoryItems and itemCategories
         inventoryItems.clear();
-        itemCategories.clear(); // Clear existing categories
-        transactionLogs.clear(); // Clear existing logs
+        itemCategories.clear();
+        transactionLogs.clear();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || (!line.startsWith("CATEGORY,") && !line.startsWith("ITEM,") && !line.startsWith("LOG,"))) {
-                    // Skip empty lines or lines not starting with a known prefix
-                    continue;
-                }
+        for (String line : rawData) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
 
-                if (line.startsWith("CATEGORY,")) {
-                    String[] parts = line.substring("CATEGORY,".length()).split(",");
-                    if (parts.length >= 1) {
-                        try {
-                            String categoryName = parts[0].trim();
-                            // We will recalculate category quantity based on items later
-                            Category category = new Category(categoryName, 0); // Initialize with 0 quantity
-                            itemCategories.add(category);
-                        } catch (Exception e) {
-                            System.err.println("Skipping invalid CATEGORY line in " + filePath + ": " + line);
-                        }
+            if (line.startsWith("CATEGORY,")) {
+                String[] parts = line.substring("CATEGORY,".length()).split(",");
+                if (parts.length >= 1) {
+                    try {
+                        String categoryName = parts[0].trim();
+                        Category category = new Category(categoryName, 0);
+                        itemCategories.add(category);
+                    } catch (Exception e) {
+                        System.err.println("Skipping invalid CATEGORY line: " + line);
                     }
-                } else if (line.startsWith("ITEM,")) {
-                    String[] parts = line.substring("ITEM,".length()).split(",");
-                    if (parts.length >= 5) { // ModelNumber, ModelName, ModelPrice, ItemQuantity, ItemCategory
-                        try {
-                            String modelNumber = parts[0].trim();
-                            String modelName = parts[1].trim();
-                            double modelPrice = Double.parseDouble(parts[2].trim());
-                            int itemQuantity = Integer.parseInt(parts[3].trim()); // Expecting 1 based on discussion
-                            String itemCategory = parts[4].trim();
-
-                            if (itemQuantity != 1) {
-                                System.err.println("Warning: Item quantity in file is not 1. Using 1 for item " + modelNumber);
-                                itemQuantity = 1; // Enforce program logic quantity
-                            }
-
-                            Item importedItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
-                            inventoryItems.add(importedItem);
-                            // Category quantity will be updated after all items are loaded
-                        } catch (NumberFormatException e) {
-                            System.err.println("Skipping invalid ITEM line (Number Format Error) in " + filePath + ": " + line);
-                        } catch (Exception e) {
-                             System.err.println("Skipping invalid ITEM line in " + filePath + ": " + line);
-                        }
-                    }
-                } else if (line.startsWith("LOG,")) {
-                     // LOG,Timestamp,Action,ModelName,ModelNumber,Quantity,Category (optional)
-                    String logEntry = line.substring("LOG,".length());
-                    transactionLogs.add(logEntry); // Add raw log entry for now
                 }
-            }
+            } else if (line.startsWith("ITEM,")) {
+                String[] parts = line.substring("ITEM,".length()).split(",");
+                if (parts.length >= 5) {
+                    try {
+                        String modelNumber = parts[0].trim();
+                        String modelName = parts[1].trim();
+                        double modelPrice = Double.parseDouble(parts[2].trim());
+                        int itemQuantity = Integer.parseInt(parts[3].trim());
+                        String itemCategory = parts[4].trim();
 
-            // After loading, recalculate category quantities based on items
-            for (Category category : itemCategories) {
-                category.setCategoryQuantity(0); // Reset category quantity before summing
-            }
-            for (Item item : inventoryItems) {
-                 Category category = findCategoryByName(item.getItemCategory());
-                 if (category != null) {
-                     category.increaseQuantity(item.getItemQuantity()); // Add item quantity (which is 1)
-                 } else {
-                     System.err.println("Warning: Item " + item.getModelNumber() + " has category " + item.getItemCategory() + " which was not found during import.");
-                     // Optionally create a default category or handle this case
-                 }
-            }
+                        if (itemQuantity != 1) {
+                            System.err.println("Warning: Item quantity in file is not 1. Using 1 for item " + modelNumber);
+                            itemQuantity = 1;
+                        }
 
-            System.out.println("Data imported successfully from " + filePath + ". Total items: " + inventoryItems.size() + ", Categories: " + itemCategories.size() + ", Log entries: " + transactionLogs.size());
-        } catch (IOException e) {
-            System.out.println("No existing " + filePath + " found or error reading file. Starting with empty inventory and categories.");
+                        Item importedItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
+                        inventoryItems.add(importedItem);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Skipping invalid ITEM line (Number Format Error): " + line);
+                    } catch (Exception e) {
+                        System.err.println("Skipping invalid ITEM line: " + line);
+                    }
+                }
+            } else if (line.startsWith("LOG,")) {
+                String logEntry = line.substring("LOG,".length());
+                transactionLogs.add(logEntry);
+            }
         }
+
+        // Recalculate category quantities after loading all items
+        for (Category category : itemCategories) {
+            category.setCategoryQuantity(0);
+        }
+        for (Item item : inventoryItems) {
+            Category category = findCategoryByName(item.getItemCategory());
+            if (category != null) {
+                category.increaseQuantity(item.getItemQuantity());
+            } else {
+                System.err.println("Warning: Item " + item.getModelNumber() + " has category " + item.getItemCategory() + " which was not found during import.");
+            }
+        }
+        System.out.println("Data imported successfully from " + filePath + ". Total items: " + inventoryItems.size() + ", Categories: " + itemCategories.size() + ", Log entries: " + transactionLogs.size());
     }
 
+    // Method to load data (internal, uses importData)
+    public void loadData() {
+        importData(this.dataFilePath);
+    }
+    
+    // Modified exportData to use Availability
     public void exportData(String filePath) {
-        System.out.println("Exporting data to " + filePath + "...");
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
-            // Write Categories
-            writer.println("CATEGORY DATA");
-            writer.println(); // Blank line for readability
-            for (Category category : itemCategories) {
-                writer.println("CATEGORY," + category.getCategoryName() + "," + category.getCategoryQuantity());
-            }
-
-            writer.println(); // Blank line for readability
-
-            // Write Items
-            writer.println("ITEM DATA");
-            writer.println(); // Blank line for readability
-            for (Item item : inventoryItems) {
-                writer.println("ITEM," + item.getModelNumber() + "," + item.getModelName() + "," +
-                               item.getModelPrice() + "," + item.getItemQuantity() + "," + // Item quantity should be 1
-                               item.getItemCategory());
-            }
-
-            writer.println(); // Blank line for readability
-
-            // Write Logs
-            writer.println("LOG DATA");
-             writer.println(); // Blank line for readability
-            for (String logEntry : transactionLogs) {
-                 writer.println("LOG," + logEntry); // Write the raw log entry back
-            }
-
-            System.out.println("Data exported successfully to " + filePath + ".");
-        } catch (IOException e) {
-            System.err.println("Error exporting data to file: " + e.getMessage());
+        StringBuilder dataToExport = new StringBuilder();
+        // Export categories
+        for (Category category : itemCategories) {
+            dataToExport.append("CATEGORY,")
+                        .append(category.getCategoryName())
+                        .append("\n");
         }
+        // Export items
+        for (Item item : inventoryItems) {
+            dataToExport.append("ITEM,")
+                        .append(item.getModelNumber()).append(",")
+                        .append(item.getModelName()).append(",")
+                        .append(item.getModelPrice()).append(",")
+                        .append(item.getItemQuantity()).append(",")
+                        .append(item.getItemCategory())
+                        .append("\n");
+        }
+        // Export logs
+        for (String logEntry : transactionLogs) {
+            dataToExport.append("LOG,").append(logEntry).append("\n");
+        }
+        availabilityChecker.writeDataToFile(filePath, dataToExport.toString());
     }
 
+    // Modified saveData to use exportData
     public void saveData() {
-        System.out.println("Saving data to default file: " + DATA_FILE + "...");
-        exportData(DATA_FILE); // Call exportData with the default file path
+        exportData(this.dataFilePath);
     }
 
     public void logTransaction(String action, String modelName, String modelNumber, int quantity) {
         String timestamp = dateFormat.format(new Date());
-        // Assuming category is needed in log, might need to retrieve it based on item
-        String itemCategory = "";
-         Item item = findItemByModelNumber(modelNumber);
-         if (item != null) {
-             itemCategory = item.getItemCategory();
-         }
-
-        String logEntryContent = timestamp + "," + action + "," + modelName + "," + modelNumber + "," + quantity + "," + itemCategory;
-
-        transactionLogs.add(logEntryContent); // Add to in-memory log list
-
-        // Append to the data file immediately
-        try (PrintWriter logWriter = new PrintWriter(new FileWriter(DATA_FILE, true))) {
-            logWriter.println("LOG," + logEntryContent);
-        } catch (IOException e) {
-            System.err.println("Error writing transaction to log file: " + e.getMessage());
-        }
+        String logEntry = String.format("%s,%s,%s,%s,%d,%s",
+                                        timestamp,
+                                        action,
+                                        modelName,
+                                        modelNumber,
+                                        quantity,
+                                        findItemByModelNumber(modelNumber) != null ? findItemByModelNumber(modelNumber).getItemCategory() : "N/A"); // Include category if item exists
+        transactionLogs.add(logEntry);
+        // Save logs immediately after adding a transaction
+        availabilityChecker.writeTransactionLogsToFile(transactionLogs);
     }
 
     public List<String> getTransactionLogs() {
         return transactionLogs;
     }
 
+    // Modified to use Availability
     public List<String> readTransactionLogsFromFile() {
-        List<String> logsFromFile = new ArrayList<>();
-        System.out.println("Reading transaction log from file: " + DATA_FILE + "...");
-        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_FILE))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("LOG,")) {
-                    logsFromFile.add(line.substring("LOG,".length()));
-                }
-            }
-            System.out.println("Finished reading transaction log from file.");
-        } catch (IOException e) {
-            System.err.println("Error reading transaction log file: " + e.getMessage());
-        }
-        return logsFromFile;
-    }
-
-    public boolean dataFileExists() {
-        File dataFile = new File(DATA_FILE);
-        return dataFile.exists();
-    }
-
-    public boolean createDataFile() {
-        System.out.println("Attempting to create data file: " + DATA_FILE + "...");
-        try {
-            File dataFile = new File(DATA_FILE);
-            if (dataFile.createNewFile()) {
-                System.out.println("Data file created successfully: " + DATA_FILE);
-                return true;
-            } else {
-                System.out.println("Data file already exists: " + DATA_FILE);
-                return true; // File already exists is also a success for creation check
-            }
-        } catch (IOException e) {
-            System.err.println("Error creating data file: " + e.getMessage());
-            return false;
-        }
+        return availabilityChecker.readTransactionLogsFromFile();
     }
 
     public List<Category> getItemCategories() {

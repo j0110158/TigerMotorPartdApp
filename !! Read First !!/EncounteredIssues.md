@@ -40,3 +40,51 @@ While Swing provides a functional GUI, the benefit of using a visual design tool
 5.  **Connecting UI Controllers to Backend:** JavaFX controller classes would call methods on the existing `InventoryMgt` instance to perform inventory operations, maintaining the separation between UI control and business logic.
 
 Implementing JavaFX with FXML and Scene Builder offers a model-view-controller (MVC) like separation, distinguishing UI layout (FXML) from UI logic (Java controllers) and business logic (backend classes). While it requires initial setup and adherence to this pattern, it significantly aids visual design workflows.
+
+---
+
+## Error: "Error removing item: Amount cannot be negative"
+
+### Description
+
+When attempting to remove an item from the inventory, the application would display an error message stating, "Error removing item: Amount cannot be negative." This issue prevented successful removal of inventory items.
+
+### Root Cause Analysis
+
+The problem stemmed from an incorrect interaction between the `InventoryMgt` class and the `Category` class during item removal.
+
+1.  **`InventoryMgt.removeItemByNumber()`**: This method was designed to remove an item from the `inventoryItems` list. As part of this process, it correctly intended to update the associated category's quantity by decrementing it by the removed item's quantity. It attempted this by calling `updateCategoryQuantity(item.getItemCategory(), -item.getItemQuantity())`.
+2.  **`InventoryMgt.updateCategoryQuantity()`**: This method, in turn, called `category.increaseQuantity(quantityChange)`.
+3.  **`Category.increaseQuantity()`**: The `increaseQuantity` method in the `Category` class includes a validation check: `if (amount < 0) { throw new IllegalArgumentException("Amount cannot be negative"); }`. Since `removeItemByNumber` passed a *negative* value (e.g., -1 for an item with quantity 1) to `updateCategoryQuantity`, which then passed it to `increaseQuantity`, this validation check was triggered, leading to the `IllegalArgumentException` and the observed error message.
+
+Essentially, the code was trying to "increase" a category's quantity by a negative amount, which was explicitly disallowed by the `Category` class's design, rather than correctly "decreasing" it.
+
+### Resolution
+
+The fix involved modifying the `updateCategoryQuantity` method in `InventoryMgt.java` to use the appropriate method from the `Category` class based on the `quantityChange`:
+
+```java
+public void updateCategoryQuantity(String categoryName, int quantityChange) {
+    // ... existing code ...
+    Category category = findCategoryByName(categoryName);
+    // ... existing code ...
+
+    if (quantityChange > 0) {
+        category.increaseQuantity(quantityChange);
+    } else if (quantityChange < 0) {
+        category.decreaseQuantity(Math.abs(quantityChange)); // Use decreaseQuantity for negative changes
+    }
+}
+```
+
+By checking if `quantityChange` is negative, the `updateCategoryQuantity` method now correctly invokes `category.decreaseQuantity(Math.abs(quantityChange))`. The `decreaseQuantity` method in `Category.java` is designed to handle decrements and also ensures that the category quantity does not fall below zero (`this.categoryQuantity = Math.max(0, this.categoryQuantity - amount);`), thus preventing the `IllegalArgumentException` and allowing items to be removed successfully.
+
+### UI Theming Conflicts with Nimbus Look and Feel
+
+**Issue:**
+
+During the implementation of a dark UI theme, directly setting `setBackground()` and `setForeground()` on individual Swing components (`JPanel`, `JTextArea`, `JTable`, `JTextField`, etc.) resulted in an inconsistent and visually unappealing interface. The custom colors clashed with the default rendering logic of the applied "Nimbus" Look and Feel (L&F), leading to visual artifacts such as mismatched borders, inconsistent component appearances, and a general lack of cohesion. For example, some components would display a dark background with light text, but their borders or other graphical elements, still drawn by Nimbus's default dark styling, would create jarring contrasts.
+
+**Resolution:**
+
+The issue was resolved by discontinuing direct color assignments to individual components and instead configuring the "Nimbus" L&F itself through `UIManager.put()` properties. This approach allows Nimbus to internally use the desired dark color palette when rendering all UI elements, ensuring a unified and consistent appearance. By setting properties like `UIManager.put("control", new Color(60, 63, 65))` or `UIManager.put("text", new Color(240, 240, 240))`, the L&F now consistently applies the dark theme across all components, including their borders, highlights, and other graphical attributes, thereby eliminating the visual conflicts experienced previously.
