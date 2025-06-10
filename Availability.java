@@ -32,44 +32,30 @@ public class Availability {
         this.dataFilePath = dataFilePath;
     }
 
-    public void writeAllDataToFile(List<Item> items, List<Category> categories, int lowStockThreshold, List<String> transactionLogs, String currentDataFolderPath) {
-        try {
-            File file = new File(dataFilePath);
-            File parentDir = file.getParentFile();
-            if (parentDir != null && !parentDir.exists()) {
-                parentDir.mkdirs();
-            }
-            if (!file.exists()) {
-                file.createNewFile();
+    public void writeAllDataToFile(List<Item> items, List<Category> categories, int lowStockThreshold, List<String> transactionLogs, String currentDataPath) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(dataFilePath, false))) {
+            writer.println("CATEGORY_DATA");
+            for (Category category : categories) {
+                if (category.getCategoryQuantity() > 0) {
+                    writer.println("CATEGORY," + category.getCategoryName());
+                }
             }
 
-            try (PrintWriter writer = new PrintWriter(new FileWriter(dataFilePath, false))) {
-                writer.println("CATEGORY_DATA");
-                for (Category category : categories) {
-                    if (category.getCategoryQuantity() > 0 || category.getCategoryName().equals(InventoryMgt.UNCATEGORIZED)) {
-                        writer.println("CATEGORY," + category.getCategoryName());
-                    }
-                }
-
-                writer.println("ITEM_DATA");
-                for (Item item : items) {
-                    writer.println("ITEM," + item.getModelNumber() + "," + item.getModelName() + "," + item.getModelPrice() + "," + item.getItemQuantity() + "," + item.getItemCategory());
-                }
-
-                writer.println("LOG_DATA");
-                for (String logEntry : transactionLogs) {
-                    writer.println(logEntry);
-                }
-
-                writer.println("LOWSTOCK_DATA");
-                String timestamp = dateFormat.format(new Date());
-                writer.println("LOWSTOCK," + timestamp + ",SET," + lowStockThreshold + ",,");
-
-                writer.println("DATA_PATH");
-                writer.println("PATH," + currentDataFolderPath);
-
-                System.out.println("All data exported successfully to " + dataFilePath);
+            writer.println("ITEM_DATA");
+            for (Item item : items) {
+                writer.println("ITEM," + item.getModelNumber() + "," + item.getModelName() + "," + item.getModelPrice() + "," + item.getItemQuantity() + "," + item.getItemCategory());
             }
+
+            writer.println("LOG_DATA");
+            for (String logEntry : transactionLogs) {
+                writer.println(logEntry);
+            }
+
+            writer.println("LOWSTOCK_DATA");
+            String timestamp = dateFormat.format(new Date());
+            writer.println("LOWSTOCK," + timestamp + ",SET," + lowStockThreshold + ",,");
+
+            System.out.println("All data exported successfully to " + dataFilePath);
         } catch (IOException e) {
             System.err.println("Error exporting all data to file: " + e.getMessage());
         }
@@ -80,18 +66,7 @@ public class Availability {
         List<Category> loadedCategories = new ArrayList<>();
         List<String> loadedLogs = new ArrayList<>();
         int loadedLowStockThreshold = 5;
-        String loadedDataPath = System.getProperty("user.dir");
-
-        File file = new File(dataFilePath);
-        if (!file.exists()) {
-            Map<String, Object> defaultData = new HashMap<>();
-            defaultData.put("items", new ArrayList<Item>());
-            defaultData.put("categories", new ArrayList<Category>());
-            defaultData.put("logs", new ArrayList<String>());
-            defaultData.put("lowStockThreshold", 5);
-            defaultData.put("dataPath", System.getProperty("user.dir"));
-            return defaultData;
-        }
+        String loadedDataPath = System.getProperty("user.dir") + File.separator + "inventory_data.csv";
 
         try (BufferedReader reader = new BufferedReader(new FileReader(dataFilePath))) {
             String line;
@@ -130,6 +105,13 @@ public class Availability {
                         break;
                     case "LOG_DATA":
                         loadedLogs.add(line);
+                        if (line.startsWith("LOWSTOCK,") && line.split(",").length >= 4) {
+                            try {
+                                loadedLowStockThreshold = Integer.parseInt(line.split(",")[3].trim());
+                            } catch (NumberFormatException e) {
+                                System.err.println("Error parsing LOWSTOCK threshold from log: " + line);
+                            }
+                        }
                         break;
                     case "LOWSTOCK_DATA":
                         if (line.startsWith("LOWSTOCK,") && line.split(",").length >= 4) {
@@ -148,11 +130,11 @@ public class Availability {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Error reading " + dataFilePath + ". Starting with default values.");
+            System.out.println("No existing " + dataFilePath + " found or error reading file. Starting with default values.");
         }
 
         List<Category> filteredCategories = loadedCategories.stream()
-                .filter(c -> c.getCategoryQuantity() > 0 || c.getCategoryName().equals(InventoryMgt.UNCATEGORIZED))
+                .filter(c -> c.getCategoryQuantity() > 0)
                 .collect(Collectors.toList());
 
         Map<String, Object> allLoadedData = new HashMap<>();

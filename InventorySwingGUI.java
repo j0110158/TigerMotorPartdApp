@@ -364,10 +364,36 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         // splitPane.setUI(...);
 
         setVisible(true);
+
+        // Add keyboard shortcut for F5 (refresh)
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "refreshView");
+        getRootPane().getActionMap().put("refreshView", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Fix for F5 refresh: Reload data and update UI components
+                inventoryManager = new InventoryMgt(); // Reinitialize inventory manager to reload all data
+                updateCategoryTree();
+                updateItemTable();
+                updateRestockAlerts();
+                updateTotalWorthLabel();
+                statusTextArea.setText("Inventory refreshed successfully.");
+            }
+        });
     }
 
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
+
+        // File Menu - Renamed to Settings Menu based on previous discussions
+        JMenu fileMenu = new JMenu("File"); // Keep for now if other sub-items are needed here
+        fileMenu.setText("Settings"); // Rename display text to Settings
+        menuBar.add(fileMenu);
+
+        // This part is the original Exit menu item. We'll remove it.
+        // JMenuItem exitMenuItem = new JMenuItem("Exit");
+        // exitMenuItem.addActionListener(e -> System.exit(0));
+        // fileMenu.add(exitMenuItem);
 
         // Settings Menu
         JMenu settingsMenu = new JMenu("Settings");
@@ -552,7 +578,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
         if (editedItem == null) {
             JOptionPane.showMessageDialog(this, "Item not found in inventory.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+             return;
         }
 
         // Get current values
@@ -620,7 +646,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 updateCategoryTree();
                 updateRestockAlerts();
                 updateTotalWorthLabel();
-            } catch (NumberFormatException ex) {
+                } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Invalid price or quantity format.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -825,11 +851,35 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File folder = fileChooser.getSelectedFile();
             if (folder != null) {
+                // Construct the potential inventory_data.csv path in the chosen folder
+                File potentialDataFile = new File(folder.getAbsolutePath() + File.separator + "inventory_data.csv");
+
+                int confirmLoad = JOptionPane.NO_OPTION; // Default to not loading
+                if (potentialDataFile.exists()) {
+                    confirmLoad = JOptionPane.showConfirmDialog(this,
+                            "An 'inventory_data.csv' file already exists in this folder.\nDo you want to load the existing data from it? (Choosing 'No' will start with a blank inventory for this path.)",
+                            "Load Existing Data?",
+                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                }
+
                 try {
-                    // Update the data file path in InventoryMgt, which will also save it
+                    // First, set the new data file path in the manager (this updates Availability's path)
                     inventoryManager.setDataFilePath(folder.getAbsolutePath());
-                    JOptionPane.showMessageDialog(this, "Data folder path set to:\n" + folder.getAbsolutePath(), "Path Updated", JOptionPane.INFORMATION_MESSAGE);
-                    // Refresh GUI after path change
+
+                    if (confirmLoad == JOptionPane.YES_OPTION && potentialDataFile.exists()) {
+                        // If user confirmed to load and file exists, force a reload from the new path
+                        inventoryManager.loadData();
+                        JOptionPane.showMessageDialog(this, "Data loaded from:\n" + potentialDataFile.getAbsolutePath(), "Path Updated & Data Loaded", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        // If no file exists, or user chose not to load, start with a blank inventory
+                        // This is achieved by reinitializing the manager and then updating UI components,
+                        // which ensures a fresh start without an existing file's data.
+                        inventoryManager = new InventoryMgt(); // Reinitialize to load blank data
+                        inventoryManager.setDataFilePath(folder.getAbsolutePath()); // Set the new path for future saves
+                        JOptionPane.showMessageDialog(this, "Data folder path set to:\n" + folder.getAbsolutePath() + "\n(New inventory_data.csv will be created on first save.)", "Path Updated", JOptionPane.INFORMATION_MESSAGE);
+                    }
+
+                    // Refresh GUI after path change/load
                     updateItemTable();
                     updateCategoryTree();
                     updateRestockAlerts();
@@ -837,6 +887,10 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                     showDataFolderPathSummary(); // Update the displayed path immediately
                 } catch (IllegalArgumentException ex) {
                     JOptionPane.showMessageDialog(this, "Error setting data path: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    // Catch any other unexpected errors during data loading/setting
+                    JOptionPane.showMessageDialog(this, "An unexpected error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace(); // Print stack trace for debugging
                 }
             }
         }
@@ -888,7 +942,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
     // Method to update the category tree
     public void updateCategoryTree() {
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("All Categories");
+         DefaultMutableTreeNode root = new DefaultMutableTreeNode("All Categories");
         categoryTreeModel = new DefaultTreeModel(root);
 
         // Get categories from InventoryMgt and sort them
@@ -899,7 +953,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
             root.add(new DefaultMutableTreeNode(category.getCategoryName()));
         }
 
-        categoryTree.setModel(categoryTreeModel);
+         categoryTree.setModel(categoryTreeModel);
         for (int i = 0; i < categoryTree.getRowCount(); i++) {
             categoryTree.expandRow(i);
         }

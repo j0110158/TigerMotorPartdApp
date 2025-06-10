@@ -20,7 +20,6 @@ public class InventoryMgt {
     private int lowStockThreshold; // Default low stock threshold will be read from file
 
     private static final String INVENTORY_DATA_FILENAME = "inventory_data.csv"; // New constant
-    public static final String UNCATEGORIZED = "Uncategorized";
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public InventoryMgt() {
@@ -28,7 +27,7 @@ public class InventoryMgt {
         itemCategories = new ArrayList<>();
         transactionLogs = new ArrayList<>();
 
-        // Initialize dataFilePath to the current working directory's inventory_data.csv
+        // Initialize Availability with the default path (current working directory)
         this.dataFilePath = System.getProperty("user.dir") + File.separator + INVENTORY_DATA_FILENAME;
         this.availabilityChecker = new Availability(this.dataFilePath); 
 
@@ -58,10 +57,10 @@ public class InventoryMgt {
         if (folderPath == null || folderPath.trim().isEmpty()) {
             throw new IllegalArgumentException("Folder path cannot be null or empty.");
         }
-        // Construct the full file path from the selected folder and update availabilityChecker
+        // Construct the full file path from the selected folder
         this.dataFilePath = folderPath + File.separator + INVENTORY_DATA_FILENAME;
-        this.availabilityChecker.setDataFilePath(this.dataFilePath); 
-        saveData(); // Save all data with the new file path, which will also persist the folderPath
+        this.availabilityChecker.setDataFilePath(this.dataFilePath); // Update Availability's full file path
+        saveData(); // Save all data with the new file path
     }
 
     // Getter for the current full data file path
@@ -170,8 +169,7 @@ public class InventoryMgt {
     // Helper method to remove a category if its quantity becomes 0
     private void removeCategoryIfEmpty(String categoryName) {
         Category category = findCategoryByName(categoryName);
-        if (category != null && category.getCategoryQuantity() == 0 && !categoryName.equals(UNCATEGORIZED)) {
-            // Do not remove Uncategorized even if empty
+        if (category != null && category.getCategoryQuantity() == 0) {
             itemCategories.remove(category);
             System.out.println("Category '" + categoryName + "' removed as it is now empty.");
             logTransaction("CATEGORY_REMOVED", categoryName, "", 0, "", 0); // Log category removal
@@ -251,30 +249,26 @@ public class InventoryMgt {
     }
 
     public void loadData() {
-        // Read all data from the data file using Availability
-        Map<String, Object> loadedData = availabilityChecker.readAllDataFromFile();
+        // Load all data from the combined CSV file using Availability
+        Map<String, Object> allLoadedData = availabilityChecker.readAllDataFromFile();
 
-        // Assign loaded data to InventoryMgt's internal collections and variables
-        this.inventoryItems = (List<Item>) loadedData.get("items");
-        this.itemCategories = (List<Category>) loadedData.get("categories");
-        this.transactionLogs = (List<String>) loadedData.get("logs");
-        this.lowStockThreshold = (int) loadedData.get("lowStockThreshold");
+        // Update local collections and threshold
+        inventoryItems = (List<Item>) allLoadedData.get("items");
+        itemCategories = (List<Category>) allLoadedData.get("categories");
+        transactionLogs = (List<String>) allLoadedData.get("logs");
+        lowStockThreshold = (int) allLoadedData.get("lowStockThreshold");
 
-        // Get the loaded *folder* path and reconstruct the full file path for this instance
-        String loadedFolderPath = (String) loadedData.get("dataPath");
-        this.dataFilePath = loadedFolderPath + File.separator + INVENTORY_DATA_FILENAME;
-
-        // Ensure the availability checker's data path is consistent with the (potentially new) loaded path
+        // With the new dynamic path handling, the dataFilePath is always derived from the current working directory
+        // The 'dataPath' loaded from the CSV is no longer used to set the application's dataFilePath.
+        // It is instead used for informational purposes only within the showDataFolderPathSummary() in GUI.
+        // We still ensure the Availability checker's path is correct.
         this.availabilityChecker.setDataFilePath(this.dataFilePath);
+
+        System.out.println("Data loaded successfully. Items: " + inventoryItems.size() + ", Categories: " + itemCategories.size());
     }
 
     public void exportData() {
-        // When exporting, pass the *folder path* that was loaded or set by the user
-        String currentFolderPathForSaving = new File(this.dataFilePath).getParent();
-        if (currentFolderPathForSaving == null) {
-            currentFolderPathForSaving = System.getProperty("user.dir"); // Default if no parent (e.g., file in root)
-        }
-        availabilityChecker.writeAllDataToFile(inventoryItems, itemCategories, lowStockThreshold, transactionLogs, currentFolderPathForSaving);
+        availabilityChecker.writeAllDataToFile(inventoryItems, itemCategories, lowStockThreshold, transactionLogs, dataFilePath);
     }
 
     public void saveData() {
