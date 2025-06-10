@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.plaf.basic.*;
 import java.io.File; // Import File class
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.border.EmptyBorder;
 
 public class InventorySwingGUI extends JFrame implements ActionListener {
     private InventoryMgt inventoryManager;
@@ -570,63 +573,138 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
     // Method to edit the selected item in the table and backend
     private void editSelectedItem() {
         try {
-        int selectedRow = itemTable.getSelectedRow();
+            int selectedRow = itemTable.getSelectedRow();
             if (selectedRow >= 0) {
-        String currentModelNumber = (String) itemTableModel.getValueAt(selectedRow, 0);
+                String currentModelNumber = (String) itemTableModel.getValueAt(selectedRow, 0);
                 Item itemToEdit = inventoryManager.findItemByModelNumber(currentModelNumber);
 
                 if (itemToEdit != null) {
+                    JDialog editItemDialog = new JDialog(this, "Edit Item", true); // true for modal dialog
+                    editItemDialog.setLayout(new BorderLayout());
+                    editItemDialog.setSize(400, 300); // Consistent size with Add Item dialog
+                    editItemDialog.setLocationRelativeTo(this); // Center dialog on screen
+                    editItemDialog.setResizable(false); // Make it non-resizable
+
                     JTextField modelNumberField = new JTextField(itemToEdit.getModelNumber());
                     JTextField modelNameField = new JTextField(itemToEdit.getModelName());
                     JTextField modelPriceField = new JTextField(String.valueOf(itemToEdit.getModelPrice()));
-                    JTextField itemQuantityField = new JTextField(String.valueOf(itemToEdit.getItemQuantity()));
+                    JSpinner itemQuantityField = new JSpinner(new SpinnerNumberModel(itemToEdit.getItemQuantity(), 1, Integer.MAX_VALUE, 1)); // Quantity spinner
                     JTextField itemCategoryField = new JTextField(itemToEdit.getItemCategory());
 
                     modelNumberField.setEditable(false); // Model number should not be editable
 
-                    JPanel panel = new JPanel(new GridLayout(0, 2));
-                    panel.add(new JLabel("Model Number:"));
-                    panel.add(modelNumberField);
-                    panel.add(new JLabel("Model Name:"));
-                    panel.add(modelNameField);
-                    panel.add(new JLabel("Price:"));
-                    panel.add(modelPriceField);
-                    panel.add(new JLabel("Quantity:"));
-                    panel.add(itemQuantityField);
-                    panel.add(new JLabel("Category:"));
-                    panel.add(itemCategoryField);
+                    JPanel inputPanel = new JPanel(new GridLayout(5, 2, 10, 10)); // 5 rows, 2 columns, gaps
+                    inputPanel.setBorder(new EmptyBorder(15, 15, 15, 15)); // Padding
+                    inputPanel.setBackground(new Color(50, 50, 50)); // Dark background for panel
 
-                    int result = JOptionPane.showConfirmDialog(this, panel, "Edit Item", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                    // Set label foreground color for better visibility on dark background
+                    JLabel modelNumberLabel = new JLabel("Model Number:");
+                    modelNumberLabel.setForeground(Color.WHITE);
+                    inputPanel.add(modelNumberLabel);
+                    inputPanel.add(modelNumberField);
 
-                    if (result == JOptionPane.OK_OPTION) {
-                        String newModelName = modelNameField.getText().trim();
-                        double newModelPrice = Double.parseDouble(modelPriceField.getText().trim());
-                        int newItemQuantity = Integer.parseInt(itemQuantityField.getText().trim());
-                        String newItemCategory = itemCategoryField.getText().trim();
+                    JLabel modelNameLabel = new JLabel("Model Name:");
+                    modelNameLabel.setForeground(Color.WHITE);
+                    inputPanel.add(modelNameLabel);
+                    inputPanel.add(modelNameField);
 
-                        // Remove the old item from inventory and its category
-                        inventoryManager.removeItemByNumber(currentModelNumber);
+                    JLabel modelPriceLabel = new JLabel("Price:");
+                    modelPriceLabel.setForeground(Color.WHITE);
+                    inputPanel.add(modelPriceLabel);
+                    inputPanel.add(modelPriceField);
 
-                        // Create and add the updated item
-                        Item updatedItem = new Item(newModelPrice, newModelName, currentModelNumber, newItemQuantity, newItemCategory);
-                        inventoryManager.addItem(updatedItem);
+                    JLabel itemQuantityLabel = new JLabel("Quantity:");
+                    itemQuantityLabel.setForeground(Color.WHITE);
+                    inputPanel.add(itemQuantityLabel);
+                    inputPanel.add(itemQuantityField);
 
-                        JOptionPane.showMessageDialog(this, "Item updated successfully.", "Item Updated", JOptionPane.INFORMATION_MESSAGE);
-                        updateAllGUIComponents(); // Refresh all GUI components after edit
-                    }
-                        } else {
+                    JLabel itemCategoryLabel = new JLabel("Category:");
+                    itemCategoryLabel.setForeground(Color.WHITE);
+                    inputPanel.add(itemCategoryLabel);
+                    inputPanel.add(itemCategoryField);
+
+                    // Button Panel
+                    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15)); // Right align with padding
+                    buttonPanel.setBackground(new Color(50, 50, 50)); // Dark background for button panel
+
+                    JButton saveButton = new JButton("Save");
+                    saveButton.setBackground(new Color(66, 133, 244)); // Google Blue
+                    saveButton.setForeground(Color.WHITE);
+                    saveButton.setFocusPainted(false); // Remove focus border
+                    saveButton.setPreferredSize(new Dimension(80, 30)); // Set preferred size
+
+                    JButton cancelButton = new JButton("Cancel");
+                    cancelButton.setBackground(new Color(234, 67, 53)); // Google Red
+                    cancelButton.setForeground(Color.WHITE);
+                    cancelButton.setFocusPainted(false);
+                    cancelButton.setPreferredSize(new Dimension(80, 30)); // Set preferred size
+
+                    // Add action listeners
+                    saveButton.addActionListener(e -> {
+                        try {
+                            String newModelName = modelNameField.getText().trim();
+                            double newModelPrice = Double.parseDouble(modelPriceField.getText().trim());
+                            int newItemQuantity = (int) itemQuantityField.getValue();
+                            String newItemCategory = itemCategoryField.getText().trim();
+
+                            if (newModelName.isEmpty() || newItemCategory.isEmpty()) {
+                                JOptionPane.showMessageDialog(editItemDialog, "Model Name and Category fields must be filled.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+                            if (newItemQuantity <= 0) {
+                                JOptionPane.showMessageDialog(editItemDialog, "Quantity must be greater than zero.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+                            if (newModelPrice < 0) {
+                                JOptionPane.showMessageDialog(editItemDialog, "Price cannot be negative.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+
+                            // Remove the old item from inventory and its category
+                            inventoryManager.removeItemByNumber(currentModelNumber);
+
+                            // Create and add the updated item
+                            Item updatedItem = new Item(newModelPrice, newModelName, currentModelNumber, newItemQuantity, newItemCategory);
+                            inventoryManager.addItem(updatedItem);
+
+                            JOptionPane.showMessageDialog(editItemDialog, "Item updated successfully.", "Item Updated", JOptionPane.INFORMATION_MESSAGE);
+                            updateAllGUIComponents(); // Refresh all GUI components after edit
+                            editItemDialog.dispose(); // Close dialog on success
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(editItemDialog, "Invalid number format for price or quantity. Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        } catch (IllegalArgumentException ex) {
+                            JOptionPane.showMessageDialog(editItemDialog, "Error editing item: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+                        } catch (IllegalStateException ex) {
+                            JOptionPane.showMessageDialog(editItemDialog, "Error editing item: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(editItemDialog, "An unexpected error occurred while editing item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                            System.err.println("Error during save operation: " + ex.getMessage());
+                            ex.printStackTrace();
+                        }
+                    });
+
+                    cancelButton.addActionListener(e -> editItemDialog.dispose()); // Close dialog on cancel
+
+                    buttonPanel.add(saveButton);
+                    buttonPanel.add(cancelButton);
+
+                    editItemDialog.add(inputPanel, BorderLayout.CENTER);
+                    editItemDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+                    // Set dialog background to match dark theme
+                    editItemDialog.getContentPane().setBackground(new Color(50, 50, 50));
+                    editItemDialog.pack(); // Pack components to their preferred sizes
+                    editItemDialog.setVisible(true);
+
+                } else {
                     JOptionPane.showMessageDialog(this, "Selected item not found in inventory.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "Please select an item to edit.", "No Item Selected", JOptionPane.WARNING_MESSAGE);
             }
-                } catch (NumberFormatException ex) {
-            System.err.println("Error parsing number during item edit: " + ex.getMessage());
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Invalid number format for price or quantity. Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
-                } catch (Exception ex) {
+        } catch (Exception ex) {
             System.err.println("Error editing selected item: " + ex.getMessage());
-                    ex.printStackTrace();
+            ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "An error occurred while editing item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -634,52 +712,121 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
     // Method to show the Add Item dialog
     private void showAddItemDialog() {
         try {
+            JDialog addItemDialog = new JDialog(this, "Add New Item", true); // true for modal dialog
+            addItemDialog.setLayout(new BorderLayout());
+            addItemDialog.setSize(400, 300); // Set a reasonable size
+            addItemDialog.setLocationRelativeTo(this); // Center dialog on screen
+            addItemDialog.setResizable(false); // Make it non-resizable
+
             JTextField modelNumberField = new JTextField();
             JTextField modelNameField = new JTextField();
             JTextField modelPriceField = new JTextField();
-            JTextField itemQuantityField = new JTextField();
+            JSpinner itemQuantityField = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1)); // Quantity spinner
             JTextField itemCategoryField = new JTextField();
 
-            JPanel panel = new JPanel(new GridLayout(0, 2));
-            panel.add(new JLabel("Model Number:"));
-            panel.add(modelNumberField);
-            panel.add(new JLabel("Model Name:"));
-            panel.add(modelNameField);
-            panel.add(new JLabel("Price:"));
-            panel.add(modelPriceField);
-            panel.add(new JLabel("Quantity:"));
-            panel.add(itemQuantityField);
-            panel.add(new JLabel("Category:"));
-            panel.add(itemCategoryField);
+            JPanel inputPanel = new JPanel(new GridLayout(5, 2, 10, 10)); // 5 rows, 2 columns, gaps
+            inputPanel.setBorder(new EmptyBorder(15, 15, 15, 15)); // Padding
+            inputPanel.setBackground(new Color(50, 50, 50)); // Dark background for panel
+            
+            // Set label foreground color for better visibility on dark background
+            JLabel modelNumberLabel = new JLabel("Model Number:");
+            modelNumberLabel.setForeground(Color.WHITE);
+            inputPanel.add(modelNumberLabel);
+            inputPanel.add(modelNumberField);
 
-            int result = JOptionPane.showConfirmDialog(this, panel, "Add New Item", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            JLabel modelNameLabel = new JLabel("Model Name:");
+            modelNameLabel.setForeground(Color.WHITE);
+            inputPanel.add(modelNameLabel);
+            inputPanel.add(modelNameField);
 
-            if (result == JOptionPane.OK_OPTION) {
-                String modelNumber = modelNumberField.getText().trim();
-                String modelName = modelNameField.getText().trim();
-                double modelPrice = Double.parseDouble(modelPriceField.getText().trim());
-                int itemQuantity = Integer.parseInt(itemQuantityField.getText().trim());
-                String itemCategory = itemCategoryField.getText().trim();
+            JLabel modelPriceLabel = new JLabel("Model Price:");
+            modelPriceLabel.setForeground(Color.WHITE);
+            inputPanel.add(modelPriceLabel);
+            inputPanel.add(modelPriceField);
+
+            JLabel itemQuantityLabel = new JLabel("Item Quantity:");
+            itemQuantityLabel.setForeground(Color.WHITE);
+            inputPanel.add(itemQuantityLabel);
+            inputPanel.add(itemQuantityField);
+
+            JLabel itemCategoryLabel = new JLabel("Item Category:");
+            itemCategoryLabel.setForeground(Color.WHITE);
+            inputPanel.add(itemCategoryLabel);
+            inputPanel.add(itemCategoryField);
+
+            // Button Panel
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15)); // Right align with padding
+            buttonPanel.setBackground(new Color(50, 50, 50)); // Dark background for button panel
+
+            JButton saveButton = new JButton("Save");
+            saveButton.setBackground(new Color(66, 133, 244)); // Google Blue
+            saveButton.setForeground(Color.WHITE);
+            saveButton.setFocusPainted(false); // Remove focus border
+            saveButton.setPreferredSize(new Dimension(80, 30)); // Set preferred size
+
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.setBackground(new Color(234, 67, 53)); // Google Red
+            cancelButton.setForeground(Color.WHITE);
+            cancelButton.setFocusPainted(false);
+            cancelButton.setPreferredSize(new Dimension(80, 30)); // Set preferred size
+
+            // Add action listeners
+            saveButton.addActionListener(e -> {
+                try {
+                    String modelNumber = modelNumberField.getText().trim();
+                    String modelName = modelNameField.getText().trim();
+                    double modelPrice = Double.parseDouble(modelPriceField.getText().trim());
+                    int itemQuantity = (int) itemQuantityField.getValue(); // Get value from JSpinner
+                    String itemCategory = itemCategoryField.getText().trim();
+
+                    if (modelNumber.isEmpty() || modelName.isEmpty() || itemCategory.isEmpty()) {
+                        JOptionPane.showMessageDialog(addItemDialog, "All fields must be filled.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    if (itemQuantity <= 0) {
+                        JOptionPane.showMessageDialog(addItemDialog, "Quantity must be greater than zero.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    if (modelPrice < 0) {
+                         JOptionPane.showMessageDialog(addItemDialog, "Price cannot be negative.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                         return;
+                    }
 
                     Item newItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
                     inventoryManager.addItem(newItem);
 
-                JOptionPane.showMessageDialog(this, "Item added successfully!", "Add Item", JOptionPane.INFORMATION_MESSAGE);
-                updateAllGUIComponents(); // Refresh all GUI components after adding
-            }
+                    JOptionPane.showMessageDialog(addItemDialog, "Item added successfully!", "Add Item", JOptionPane.INFORMATION_MESSAGE);
+                    updateAllGUIComponents();
+                    addItemDialog.dispose(); // Close dialog on success
                 } catch (NumberFormatException ex) {
-            System.err.println("Error parsing number during add item: " + ex.getMessage());
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Invalid number format for price or quantity. Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
-        } catch (IllegalArgumentException ex) {
-            System.err.println("Error adding item (Invalid argument): " + ex.getMessage());
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error adding item: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
-        } catch (IllegalStateException ex) {
-            System.err.println("Error adding item (Illegal state): " + ex.getMessage());
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error adding item: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(addItemDialog, "Invalid number format for price or quantity. Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(addItemDialog, "Error adding item: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+                } catch (IllegalStateException ex) {
+                    JOptionPane.showMessageDialog(addItemDialog, "Error adding item: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception ex) {
+                    // Catch any other unexpected errors during the save process
+                    JOptionPane.showMessageDialog(addItemDialog, "An unexpected error occurred while adding item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    System.err.println("Error during save operation: " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            });
+
+            cancelButton.addActionListener(e -> addItemDialog.dispose()); // Close dialog on cancel
+
+            buttonPanel.add(saveButton);
+            buttonPanel.add(cancelButton);
+
+            addItemDialog.add(inputPanel, BorderLayout.CENTER);
+            addItemDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+            // Set dialog background to match dark theme
+            addItemDialog.getContentPane().setBackground(new Color(50, 50, 50));
+            addItemDialog.pack(); // Pack components to their preferred sizes
+            addItemDialog.setVisible(true);
+
+        } catch (Exception ex) {
+            // Catch any errors during dialog creation or initial display
             System.err.println("Unknown error adding item: " + ex.getMessage());
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "An unexpected error occurred while adding item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
