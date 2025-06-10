@@ -1,0 +1,33 @@
+
+
+Version:	3.50
+CmdLine:	C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\exe_output\TigerMotorhubApp.exe --l4j-debug
+JNI:		No
+WOW64:		Yes
+Working dir:	C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\exe_output\.
+Requires JDK:	No
+Requires 64-Bit: Yes
+Java min ver:	1.008.000
+Java max ver:	
+Substitute:	JAVA_HOME = 
+Substitute:	PATH = C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR;C:\Program Files\Eclipse Adoptium\jdk-17.0.12.7-hotspot\bin;C:\Program Files\Git\cmd;c:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin;c:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin;C:\Program Files\Java\jdk-24\bin;C:\Users\Carlos\AppData\Local\Microsoft\WindowsApps;C:\Users\Carlos\AppData\Local\GitHubDesktop\bin;C:\Users\Carlos\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\Carlos\Downloads\gson-main;;C:\Program Files\Java\jdk-24\bin
+JRE paths:	;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR;C:\Program Files\Eclipse Adoptium\jdk-17.0.12.7-hotspot\bin;C:\Program Files\Git\cmd;c:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin;c:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin;C:\Program Files\Java\jdk-24\bin;C:\Users\Carlos\AppData\Local\Microsoft\WindowsApps;C:\Users\Carlos\AppData\Local\GitHubDesktop\bin;C:\Users\Carlos\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\Carlos\Downloads\gson-main;;C:\Program Files\Java\jdk-24\bin
+Check launcher:	C:\Program Files\Common Files\Oracle\Java\javapath\bin\javaw.exe (not found)
+Check launcher:	C:\WINDOWS\system32\bin\javaw.exe (not found)
+Check launcher:	C:\WINDOWS\bin\javaw.exe (not found)
+Check launcher:	C:\WINDOWS\System32\Wbem\bin\javaw.exe (not found)
+Check launcher:	C:\WINDOWS\System32\WindowsPowerShell\v1.0\bin\javaw.exe (not found)
+Check launcher:	C:\WINDOWS\System32\OpenSSH\bin\javaw.exe (not found)
+Check launcher:	C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common\bin\javaw.exe (not found)
+Check launcher:	C:\Program Files\dotnet\bin\javaw.exe (not found)
+Check launcher:	C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR\bin\javaw.exe (not found)
+Check launcher:	C:\Program Files\Eclipse Adoptium\jdk-17.0.12.7-hotspot\bin\javaw.exe (not found)
+Check launcher:	C:\Program Files\Git\cmd\bin\javaw.exe (not found)
+Check launcher:	c:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin\javaw.exe (not found)
+Check launcher:	c:\Users\Carlos\AppData\Local\Programs\cursor\resources\app\bin\javaw.exe (not found)
+Check launcher:	C:\Program Files\Java\jdk-24\bin\javaw.exe (OK)
+Version string: 1.024.000_001 / 64-Bit (OK)
+Launcher:	C:\Program Files\Java\jdk-24\bin\javaw.exe
+Launcher args:	-jar "C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\exe_output\TigerMotorhubApp.exe"
+Args length:	127/32768 chars
+Exit code:	0

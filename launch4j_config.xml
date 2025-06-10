@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4j>
+    <dontWrapJar>false</dontWrapJar>
+    <headerType>gui</headerType>
+    <jar>TigerMotorhubApp.jar</jar>
+    <outfile>TigerMotorhubApp.exe</outfile>
+    <errTitle>Java Virtual Machine Launcher</errTitle>
+    <cmdLine></cmdLine>
+    <chdir>.</chdir>
+    <priority>normal</priority>
+    <downloadUrl>http://java.com/download</downloadUrl>
+    <supportUrl></supportUrl>
+    <stayAlive>false</stayAlive>
+    <restartOnCrash>false</restartOnCrash>
+    <manifest></manifest>
+    <icon></icon>
+    <jre>
+        <path>./jre</path>
+        <bundledJre64Bit>false</bundledJre64Bit>
+        <bundledJreAsFallback>false</bundledJreAsFallback>
+        <minVersion>1.8.0</minVersion>
+        <maxVersion></maxVersion>
+        <jdkPreference>jreOnly</jdkPreference>
+        <runtimeBits>64</runtimeBits>
+    </jre>
+    <splash>
+        <file></file>
+        <waitForWindow>true</waitForWindow>
+        <timeout>60</timeout>
+        <timeoutErr>true</timeoutErr>
+    </splash>
+    <versionInformation>
+        <fileVersion>1.0.0.0</fileVersion>
+        <txtFileVersion>1.0.0.0</txtFileVersion>
+        <fileDescription>Tiger Motorhub App</fileDescription>
+        <copyright>Your Company Name</copyright>
+        <productVersion>1.0.0.0</productVersion>
+        <txtProductVersion>1.0.0.0</txtProductVersion>
+        <productName>Tiger Motorhub App</productName>
+        <companyName>Your Company Name</companyName>
+        <internalName>TigerMotorhubApp</internalName>
+        <originalFilename>TigerMotorhubApp.exe</originalFilename>
+    </versionInformation>
+</launch4j> 
