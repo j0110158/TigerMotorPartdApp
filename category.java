@@ -1,8 +1,4 @@
-
-
 public class Category {
-    private static final int RESTOCK_THRESHOLD = 5;
-    
     private String categoryName;
     public int categoryQuantity;
 
@@ -70,7 +66,6 @@ public class Category {
             throw new IllegalArgumentException("Category quantity cannot be negative");
         }
         this.categoryQuantity = quantity;
-        checkRestockNeeded();
     }
 
     /**
@@ -83,7 +78,6 @@ public class Category {
             throw new IllegalArgumentException("Amount cannot be negative");
         }
         this.categoryQuantity += amount;
-        checkRestockNeeded();
     }
 
     /**
@@ -96,21 +90,15 @@ public class Category {
             throw new IllegalArgumentException("Amount cannot be negative");
         }
         this.categoryQuantity = Math.max(0, this.categoryQuantity - amount);
-        checkRestockNeeded();
     }
 
     /**
-     * Checks if the category needs restocking based on the threshold.
+     * Checks if the category needs restocking based on the provided threshold.
+     * @param lowStockThreshold The threshold to compare against
      * @return true if the category needs restocking, false otherwise
      */
-    public boolean needsRestock() {
-        return categoryQuantity < RESTOCK_THRESHOLD;
-    }
-
-    private void checkRestockNeeded() {
-        if (needsRestock()) {
-            System.out.println("Good morning, please restock items for category: " + categoryName);
-        }
+    public boolean needsRestock(int lowStockThreshold) {
+        return categoryQuantity < lowStockThreshold;
     }
 
     @Override

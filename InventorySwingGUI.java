@@ -122,6 +122,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         UIManager.put("MenuItem.background", darkControl);
         UIManager.put("MenuItem.foreground", darkText);
         UIManager.put("PopupMenu.background", darkControl);
+        UIManager.put("MenuItem.acceleratorForeground", Color.BLACK); // Set accelerator text color to black
 
         // Scroll Panes
         UIManager.put("ScrollPane.background", darkBackground);
@@ -200,7 +201,10 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         itemPanel.setBorder(BorderFactory.createTitledBorder("Inventory Items"));
 
         // Search bar with improved layout
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        JPanel searchPanel = new JPanel(new BorderLayout()); // Use BorderLayout for searchPanel
+
+        // Sub-panel for search input and buttons (left side)
+        JPanel leftControlsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         searchField = new JTextField(20);
         searchField.setActionCommand("Search");
         searchField.setToolTipText("Enter model number, name, or category to search");
@@ -215,16 +219,18 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         clearButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         JLabel searchLabel = new JLabel("Search:");
-        searchPanel.add(searchLabel);
-        searchPanel.add(searchField);
-        searchPanel.add(searchButton);
-        searchPanel.add(clearButton);
+        leftControlsPanel.add(searchLabel);
+        leftControlsPanel.add(searchField);
+        leftControlsPanel.add(searchButton);
+        leftControlsPanel.add(clearButton);
 
-        // Add JLabel for cumulative worth to the search panel
+        searchPanel.add(leftControlsPanel, BorderLayout.WEST); // Add left controls to the west
+
+        // Add JLabel for cumulative worth to the search panel (right side)
         totalWorthLabel = new JLabel("Total Inventory Worth: Php0.00"); // Initial text
         totalWorthLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        totalWorthLabel.setBorder(BorderFactory.createEmptyBorder(0, 50, 0, 0)); // Add some padding
-        searchPanel.add(totalWorthLabel);
+        totalWorthLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10)); // Add some padding on right side
+        searchPanel.add(totalWorthLabel, BorderLayout.EAST); // Directly add total worth to the east
 
         // Add action listeners for search
         searchField.addActionListener(this);
@@ -245,13 +251,15 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         itemTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         itemTable.getTableHeader().setReorderingAllowed(false);
         itemTable.setAutoCreateRowSorter(true);
+        itemTable.setFont(new Font("Segoe UI", Font.PLAIN, 14)); // Increased font size
+        itemTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14)); // Increased header font size
 
         // Set column widths
-        itemTable.getColumnModel().getColumn(0).setPreferredWidth(100);
-        itemTable.getColumnModel().getColumn(1).setPreferredWidth(200);
-        itemTable.getColumnModel().getColumn(2).setPreferredWidth(100);
-        itemTable.getColumnModel().getColumn(3).setPreferredWidth(80);
-        itemTable.getColumnModel().getColumn(4).setPreferredWidth(150);
+        itemTable.getColumnModel().getColumn(0).setPreferredWidth(150); // Model Number
+        itemTable.getColumnModel().getColumn(1).setPreferredWidth(300); // Model Name
+        itemTable.getColumnModel().getColumn(2).setPreferredWidth(120); // Price
+        itemTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Quantity
+        itemTable.getColumnModel().getColumn(4).setPreferredWidth(200); // Category
 
         // Add right-click menu for table
         JPopupMenu tablePopupMenu = new JPopupMenu();
@@ -325,7 +333,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         restockTextArea.setEditable(false);
         restockTextArea.setLineWrap(true);
         restockTextArea.setWrapStyleWord(true);
-        restockTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        restockTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 14)); // Increased font size
         restockTextArea.setBorder(BorderFactory.createTitledBorder("Restock Alerts"));
 
         restockScrollPane = new JScrollPane(restockTextArea);
@@ -360,108 +368,61 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        // menuBar.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
 
-        // Settings menu (formerly File)
+        // Settings Menu
         JMenu settingsMenu = new JMenu("Settings");
-        settingsMenu.setMnemonic('S');
-        // settingsMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        JMenuItem setLowStockThresholdItem = new JMenuItem("Set Low Stock Threshold");
-        setLowStockThresholdItem.setToolTipText("Set the quantity threshold for low stock notifications");
-        // setLowStockThresholdItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // setLowStockThresholdItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-        settingsMenu.add(setLowStockThresholdItem);
-
-        // New Data Path menu
-        JMenu dataPathMenu = new JMenu("Data Path ...");
-        dataPathMenu.setToolTipText("Manage inventory data file location");
-        // dataPathMenu.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // dataPathMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-        settingsMenu.add(dataPathMenu);
-
-        JMenuItem setDataFolderPathItem = new JMenuItem("Set Data Folder Path");
-        setDataFolderPathItem.setToolTipText("Set the folder path for inventory data");
-        // setDataFolderPathItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // setDataFolderPathItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-        dataPathMenu.add(setDataFolderPathItem);
-
-        JMenuItem viewDataFolderPathSummaryItem = new JMenuItem("View Folder Path Summary");
-        viewDataFolderPathSummaryItem.setToolTipText("View the current folder path of inventory data");
-        // viewDataFolderPathSummaryItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // viewDataFolderPathSummaryItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-        dataPathMenu.add(viewDataFolderPathSummaryItem);
-
-        settingsMenu.addSeparator();
-
-        JMenuItem exitItem = new JMenuItem("Exit"); // Add icon later
-        exitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_DOWN_MASK));
-        exitItem.setToolTipText("Exit the application");
-        // exitItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // exitItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-        settingsMenu.add(exitItem);
-
-        // Edit menu
-        JMenu editMenu = new JMenu("Edit");
-        editMenu.setMnemonic('E');
-        // editMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        JMenuItem addItem = new JMenuItem("Add Item"); // Add icon later
-        addItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
-        addItem.setToolTipText("Add a new item to the inventory");
-        // addItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // addItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        JMenuItem removeItem = new JMenuItem("Remove Item"); // Add icon later
-        removeItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
-        removeItem.setToolTipText("Remove the selected item from the inventory");
-        // removeItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // removeItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        JMenuItem editItem = new JMenuItem("Edit Item"); // Add icon later
-        editItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0));
-        editItem.setToolTipText("Edit the selected item's details");
-        // editItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // editItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        editMenu.add(addItem);
-        editMenu.add(removeItem);
-        editMenu.add(editItem);
-
-        // View menu
-        JMenu viewMenu = new JMenu("View");
-        viewMenu.setMnemonic('V');
-        // viewMenu.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        JMenuItem refreshItem = new JMenuItem("Refresh"); // Add icon later
-        refreshItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
-        refreshItem.setToolTipText("Refresh the inventory view");
-        // refreshItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // refreshItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        JMenuItem transactionLogItem = new JMenuItem("Transaction Log"); // Add icon later
-        transactionLogItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
-        transactionLogItem.setToolTipText("View the transaction history");
-        // transactionLogItem.setBackground(new Color(60, 63, 65)); // Removed, UIManager handles this
-        // transactionLogItem.setForeground(new Color(240, 240, 240)); // Removed, UIManager handles this
-
-        viewMenu.add(refreshItem);
-        viewMenu.add(transactionLogItem);
-
-        // Add action listeners for all menu items
-        setLowStockThresholdItem.addActionListener(this);
-        setDataFolderPathItem.addActionListener(this);
-        viewDataFolderPathSummaryItem.addActionListener(this);
-        exitItem.addActionListener(this);
-        addItem.addActionListener(this);
-        removeItem.addActionListener(this);
-        editItem.addActionListener(this);
-        refreshItem.addActionListener(this);
-        transactionLogItem.addActionListener(this);
-
         menuBar.add(settingsMenu);
+
+        JMenuItem setLowStockThresholdMenuItem = new JMenuItem("Set Low Stock Threshold");
+        setLowStockThresholdMenuItem.addActionListener(e -> showSetLowStockThresholdDialog());
+        settingsMenu.add(setLowStockThresholdMenuItem);
+
+        JMenuItem setDataFilePathMenuItem = new JMenuItem("Set Data Folder Path");
+        setDataFilePathMenuItem.addActionListener(e -> showSetDataFilePathDialog());
+        settingsMenu.add(setDataFilePathMenuItem);
+
+        JMenuItem showDataFolderPathMenuItem = new JMenuItem("Show Data Folder Path");
+        showDataFolderPathMenuItem.addActionListener(e -> showDataFolderPathSummary());
+        settingsMenu.add(showDataFolderPathMenuItem);
+
+        // Edit Menu
+        JMenu editMenu = new JMenu("Edit");
         menuBar.add(editMenu);
+
+        JMenuItem addItemMenuItem = new JMenuItem("Add Item");
+        addItemMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
+        addItemMenuItem.addActionListener(e -> showAddItemDialog());
+        editMenu.add(addItemMenuItem);
+
+        JMenuItem removeItemMenuItem = new JMenuItem("Remove Item");
+        removeItemMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0)); // No modifier
+        removeItemMenuItem.addActionListener(e -> removeSelectedItem());
+        editMenu.add(removeItemMenuItem);
+
+        JMenuItem editItemMenuItem = new JMenuItem("Edit Item");
+        editItemMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0)); // F2 key
+        editItemMenuItem.addActionListener(e -> editSelectedItem());
+        editMenu.add(editItemMenuItem);
+
+        // View Menu
+        JMenu viewMenu = new JMenu("View");
         menuBar.add(viewMenu);
+
+        JMenuItem viewLogMenuItem = new JMenuItem("View Transaction Log");
+        viewLogMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        viewLogMenuItem.addActionListener(e -> showTransactionLogDialog());
+        viewMenu.add(viewLogMenuItem);
+
+        JMenuItem refreshViewMenuItem = new JMenuItem("Refresh View");
+        refreshViewMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0)); // F5 key
+        refreshViewMenuItem.addActionListener(e -> {
+            inventoryManager.loadData(); // Reload all data from file
+            updateItemTable();
+            updateCategoryTree();
+            updateRestockAlerts();
+            updateTotalWorthLabel();
+        });
+        viewMenu.add(refreshViewMenuItem);
 
         return menuBar;
     }
@@ -485,9 +446,11 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                 editSelectedItem();
                 break;
             case "Refresh":
-                updateCategoryTree();
+                inventoryManager.loadData(); // Reload all data from file
                 updateItemTable();
-                statusTextArea.setText("Inventory refreshed.");
+                updateCategoryTree();
+                updateRestockAlerts();
+                updateTotalWorthLabel();
                 break;
             case "Set Low Stock Threshold":
                 showSetLowStockThresholdDialog();
@@ -555,28 +518,23 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
             return;
         }
 
-        // Get the model number from the selected row (assuming Model Number is the first column)
         String modelNumber = (String) itemTableModel.getValueAt(selectedRow, 0);
+        String itemName = (String) itemTableModel.getValueAt(selectedRow, 1);
+        String itemCategory = (String) itemTableModel.getValueAt(selectedRow, 4); // Get category for logging
+        int itemQuantity = (int) itemTableModel.getValueAt(selectedRow, 3); // Get quantity for logging
 
-        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove item with Model Number: " + modelNumber + "?", "Confirm Removal", JOptionPane.YES_NO_OPTION);
-
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove " + itemName + " (Model: " + modelNumber + ")?", "Confirm Removal", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                // Find the item to log the transaction before removing
-                Item itemToRemove = inventoryManager.searchItem(modelNumber); // Assuming searchItem finds by model number
-                if (itemToRemove != null) {
-                     inventoryManager.logTransaction("REMOVE", itemToRemove.getModelName(), itemToRemove.getModelNumber(), itemToRemove.getItemQuantity());
-                }
-
                 inventoryManager.removeItemByNumber(modelNumber);
-                inventoryManager.saveData(); // Save data after removing
-
-                updateItemTable(); // Refresh table
-                updateCategoryTree(); // Refresh tree
-                statusTextArea.setText("Item removed successfully: " + modelNumber);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error removing item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
+                statusTextArea.append("Item removed successfully: " + itemName + "\n");
+                inventoryManager.logTransaction("REMOVE", itemName, modelNumber, itemQuantity, itemCategory, 0); // Corrected arguments
+                updateItemTable();
+                updateCategoryTree(); // Update category tree as category might become empty
+                updateRestockAlerts();
+                updateTotalWorthLabel();
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(this, "Error removing item: " + ex.getMessage(), "Removal Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -589,138 +547,83 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
             return;
         }
 
-        // Get current item details from the selected row
-        String currentModelNumber = (String) itemTableModel.getValueAt(selectedRow, 0);
-        String currentModelName = (String) itemTableModel.getValueAt(selectedRow, 1);
-        double currentModelPrice = (double) itemTableModel.getValueAt(selectedRow, 2);
-        int currentItemQuantity = (int) itemTableModel.getValueAt(selectedRow, 3);
-        String currentItemCategory = (String) itemTableModel.getValueAt(selectedRow, 4);
+        String modelNumber = (String) itemTableModel.getValueAt(selectedRow, 0);
+        Item editedItem = inventoryManager.searchItem(modelNumber);
 
-        // Find the actual Item object in the inventoryManager
-        Item itemToEdit = inventoryManager.searchItem(currentModelNumber); // Assuming searchItem finds by model number
-        if (itemToEdit == null) {
-             JOptionPane.showMessageDialog(this, "Error: Could not find the selected item in the inventory.", "Error", JOptionPane.ERROR_MESSAGE);
-             return;
+        if (editedItem == null) {
+            JOptionPane.showMessageDialog(this, "Item not found in inventory.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
-        JDialog editItemDialog = new JDialog(this, "Edit Item", true);
-        editItemDialog.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        // Get current values
+        String currentName = editedItem.getModelName();
+        double currentPrice = editedItem.getModelPrice();
+        int currentQuantity = editedItem.getItemQuantity();
+        String currentCategory = editedItem.getItemCategory();
 
-        JTextField modelNumberField = new JTextField(currentModelNumber, 20);
-        modelNumberField.setEnabled(false); // Model number is usually not editable
-        JTextField modelNameField = new JTextField(currentModelName, 20);
-        JTextField modelPriceField = new JTextField(String.valueOf(currentModelPrice), 20);
-        JTextField itemQuantityField = new JTextField(String.valueOf(currentItemQuantity), 20);
-        itemQuantityField.setEnabled(false); // Quantity is fixed at 1 as per logic
-        JTextField itemCategoryField = new JTextField(currentItemCategory, 20);
+        JTextField modelNameField = new JTextField(currentName);
+        JTextField modelPriceField = new JTextField(String.valueOf(currentPrice));
+        JTextField itemQuantityField = new JTextField(String.valueOf(currentQuantity));
+        JTextField itemCategoryField = new JTextField(currentCategory);
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        editItemDialog.add(new JLabel("Model Number:"), gbc);
-        gbc.gridy++;
-        editItemDialog.add(new JLabel("Model Name:"), gbc);
-        gbc.gridy++;
-        editItemDialog.add(new JLabel("Model Price:"), gbc);
-        gbc.gridy++;
-        editItemDialog.add(new JLabel("Item Quantity:"), gbc);
-        gbc.gridy++;
-        editItemDialog.add(new JLabel("Item Category:"), gbc);
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(new JLabel("Model Name:"));
+        panel.add(modelNameField);
+        panel.add(new JLabel("Model Price:"));
+        panel.add(modelPriceField);
+        panel.add(new JLabel("Item Quantity:"));
+        panel.add(itemQuantityField);
+        panel.add(new JLabel("Item Category:"));
+        panel.add(itemCategoryField);
 
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        editItemDialog.add(modelNumberField, gbc);
-        gbc.gridy++;
-        editItemDialog.add(modelNameField, gbc);
-        gbc.gridy++;
-        editItemDialog.add(modelPriceField, gbc);
-        gbc.gridy++;
-        editItemDialog.add(itemQuantityField, gbc);
-        gbc.gridy++;
-        editItemDialog.add(itemCategoryField, gbc);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Edit Item",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        JButton saveButton = new JButton("Save Changes");
-        JButton cancelButton = new JButton("Cancel");
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String newName = modelNameField.getText();
+                double newPrice = Double.parseDouble(modelPriceField.getText());
+                int newQuantity = Integer.parseInt(itemQuantityField.getText());
+                String newCategory = itemCategoryField.getText();
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        gbc.gridwidth = 2;
-        editItemDialog.add(buttonPanel, gbc);
-
-        // Add action listeners for dialog buttons
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Get updated data from fields
-                String updatedModelName = modelNameField.getText().trim();
-                String updatedModelPriceStr = modelPriceField.getText().trim();
-                String updatedItemCategory = itemCategoryField.getText().trim();
-
-                // Basic validation
-                if (updatedModelName.isEmpty() || updatedModelPriceStr.isEmpty() || updatedItemCategory.isEmpty()) {
-                    JOptionPane.showMessageDialog(editItemDialog, "All fields except Model Number and Quantity are required.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                // Input validation (basic)
+                if (newName.trim().isEmpty() || newCategory.trim().isEmpty() || newPrice < 0 || newQuantity < 0) {
+                    JOptionPane.showMessageDialog(this, "Please enter valid data for all fields (price and quantity must be non-negative).", "Invalid Input", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                try {
-                    double updatedModelPrice = Double.parseDouble(updatedModelPriceStr);
-                    int updatedItemQuantity = 1; // Still fixed at 1
+                // Update the item properties
+                editedItem.setModelName(newName);
+                editedItem.setModelPrice(newPrice);
+                editedItem.setItemCategory(newCategory);
 
-                    // Check if updated category exists, prompt to create if not
-                     Category existingCategory = inventoryManager.findCategoryByName(updatedItemCategory);
-                    if (existingCategory == null) {
-                        int createCategoryResponse = JOptionPane.showConfirmDialog(editItemDialog, "Category \'" + updatedItemCategory + "\' not found. Do you want to create it?", "Category Not Found", JOptionPane.YES_NO_OPTION);
-                        if (createCategoryResponse == JOptionPane.YES_OPTION) {
-                            inventoryManager.addCategory(updatedItemCategory, 0); // Initial quantity 0
-                            statusTextArea.setText("Category \'" + updatedItemCategory + "\' created.");
-                        } else {
-                            statusTextArea.setText("Item not updated: Category not created.");
-                            editItemDialog.dispose();
-                            return;
-                        }
-                    }
+                // Handle quantity change and update category quantity
+                int oldQuantity = editedItem.getItemQuantity(); // Store old quantity before updating
+                editedItem.setItemQuantity(newQuantity);
+                inventoryManager.updateCategoryQuantity(currentCategory, newQuantity - oldQuantity); // Update the old category
 
-                    // Update the item details in the backend
-                    // Note: Depending on your InventoryMgt implementation, you might need a specific update method
-                    // For now, I'll assume you might remove and re-add, or the Item object itself is mutable and updated by reference
-                    // A more robust approach in InventoryMgt would be an updateItem(modelNumber, newDetails) method.
-                    // For this sample, let's directly update the found item object's properties if mutable:
-                    itemToEdit.setModelName(updatedModelName);
-                    itemToEdit.setModelPrice(updatedModelPrice);
-                    itemToEdit.setItemCategory(updatedItemCategory);
-                    // Assuming ItemQuantity is not editable as per logic
-
-                    inventoryManager.saveData(); // Save data after editing
-
-                    updateItemTable(); // Refresh table
-                    updateCategoryTree(); // Refresh tree
-                    statusTextArea.setText("Item updated successfully: " + itemToEdit.getModelName());
-                    editItemDialog.dispose(); // Close dialog
-
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(editItemDialog, "Invalid price format.", "Input Error", JOptionPane.WARNING_MESSAGE);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(editItemDialog, "Error updating item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace();
+                // If category changed, update quantities for both old and new categories
+                if (!currentCategory.equalsIgnoreCase(newCategory)) {
+                    // Decrease quantity in old category by new quantity, effectively moving it
+                    inventoryManager.updateCategoryQuantity(currentCategory, -newQuantity);
+                    // Increase quantity in new category by new quantity
+                    inventoryManager.updateCategoryQuantity(newCategory, newQuantity);
                 }
-            }
-        });
 
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                editItemDialog.dispose(); // Close dialog without saving
-            }
-        });
+                statusTextArea.append("Item updated successfully: " + editedItem.getModelName() + "\n");
+                inventoryManager.logTransaction("EDIT", editedItem.getModelName(), editedItem.getModelNumber(), newQuantity, editedItem.getItemCategory(), oldQuantity); // Corrected arguments
 
-        editItemDialog.pack();
-        editItemDialog.setLocationRelativeTo(this);
-        editItemDialog.setVisible(true);
+                // Save changes immediately after editing
+                inventoryManager.saveData();
+
+                updateItemTable();
+                updateCategoryTree();
+                updateRestockAlerts();
+                updateTotalWorthLabel();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid price or quantity format.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     // Method to show the Add Item dialog
@@ -839,12 +742,13 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
                     // Create and add the item
                     Item newItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
                     inventoryManager.addItem(newItem);
-                    inventoryManager.logTransaction("ADD", modelName, modelNumber, itemQuantity);
-                    inventoryManager.saveData(); // Save data after adding
+                    statusTextArea.append("Item added successfully: " + newItem.getModelName() + "\n");
+                    inventoryManager.logTransaction("ADD", newItem.getModelName(), newItem.getModelNumber(), newItem.getItemQuantity(), newItem.getItemCategory(), 0); // Corrected arguments
 
-                    updateItemTable(); // Refresh table
-                    updateCategoryTree(); // Refresh tree
-                    statusTextArea.setText("Item added successfully: " + modelName);
+                    updateItemTable();
+                    updateCategoryTree();
+                    updateRestockAlerts();
+                    updateTotalWorthLabel();
                     addItemDialog.dispose(); // Close dialog
 
                 } catch (NumberFormatException ex) {
@@ -871,60 +775,41 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
     // Method to show the transaction log dialog
     private void showTransactionLogDialog() {
         JDialog logDialog = new JDialog(this, "Transaction Log", true);
+        logDialog.setSize(700, 500);
         logDialog.setLayout(new BorderLayout());
-        logDialog.setSize(800, 600);
         logDialog.setLocationRelativeTo(this);
 
-        // Create table model for transaction log
-        DefaultTableModel logTableModel = new DefaultTableModel(
-            new Object[]{"Timestamp", "Action", "Model Name", "Model Number", "Quantity", "Category"}, 0);
-        JTable logTable = new JTable(logTableModel);
-        JScrollPane scrollPane = new JScrollPane(logTable);
+        JTextArea logArea = new JTextArea();
+        logArea.setEditable(false);
+        logArea.setBackground(UIManager.getColor("TextPane.background"));
+        logArea.setForeground(UIManager.getColor("TextPane.foreground"));
+        logArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
-        // Get transaction logs and populate table
-        List<String> logs = inventoryManager.readTransactionLogsFromFile();
-        for (String logEntry : logs) {
-            String[] parts = logEntry.split(",");
-            if (parts.length >= 5) {
-                logTableModel.addRow(new Object[]{
-                    parts[0], // Timestamp
-                    parts[1], // Action
-                    parts[2], // Model Name
-                    parts[3], // Model Number
-                    parts[4], // Quantity
-                    parts.length > 5 ? parts[5] : "" // Category (optional)
-                });
-            }
+        // Load logs from InventoryMgt (which now reads from Availability)
+        List<String> logs = inventoryManager.getTransactionLogs(); // Corrected method call
+        for (String log : logs) {
+            logArea.append(log + "\n");
         }
 
-        // Add close button
-        JButton closeButton = new JButton("Close");
-        closeButton.addActionListener(e -> logDialog.dispose());
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(closeButton);
-
-        logDialog.add(scrollPane, BorderLayout.CENTER);
-        logDialog.add(buttonPanel, BorderLayout.SOUTH);
+        logDialog.add(new JScrollPane(logArea), BorderLayout.CENTER);
         logDialog.setVisible(true);
     }
 
     // Method to show dialog for setting low stock threshold
     private void showSetLowStockThresholdDialog() {
-        String input = (String) JOptionPane.showInputDialog(this, "Enter new low stock threshold:", "Set Low Stock Threshold", JOptionPane.QUESTION_MESSAGE, null, null, String.valueOf(inventoryManager.getLowStockThreshold()));
-        // Ensure the input dialog also follows the dark theme, if possible (often limited by L&F)
+        String input = JOptionPane.showInputDialog(this, "Enter new low stock threshold:", "Set Low Stock Threshold", JOptionPane.PLAIN_MESSAGE);
         if (input != null && !input.trim().isEmpty()) {
             try {
                 int newThreshold = Integer.parseInt(input.trim());
                 if (newThreshold < 0) {
-                    JOptionPane.showMessageDialog(this, "Threshold cannot be negative.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Threshold cannot be negative.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                inventoryManager.setLowStockThreshold(newThreshold); // Update threshold in InventoryMgt
-                statusTextArea.setText("Low stock threshold set to: " + newThreshold);
-                updateItemTable(); // Refresh table to reflect new threshold
+                inventoryManager.setLowStockThreshold(newThreshold); // This now saves and logs
+                updateRestockAlerts(); // Refresh alerts with new threshold
+                JOptionPane.showMessageDialog(this, "Low stock threshold set to " + newThreshold + ".", "Threshold Updated", JOptionPane.INFORMATION_MESSAGE);
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Invalid number format. Please enter an integer.", "Input Error", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid number format for threshold.", "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -932,41 +817,36 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
     // Method to show dialog for setting data file path
     private void showSetDataFilePathDialog() {
         JFileChooser fileChooser = new JFileChooser();
-        // Change to allow selecting directories only
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.setDialogTitle("Select Inventory Data Folder");
 
-        int result = fileChooser.showOpenDialog(this); // Use showOpenDialog for selecting a folder
-        if (result == JFileChooser.APPROVE_OPTION) {
-            String selectedFolder = fileChooser.getSelectedFile().getAbsolutePath();
-            
-            try {
-                // Update data *folder* path in InventoryMgt
-                inventoryManager.setDataFilePath(selectedFolder); 
-                inventoryManager.loadData(); // Reload data from the new path
-                updateCategoryTree();
-                updateItemTable();
-                statusTextArea.setText("Inventory data folder path set to: " + selectedFolder + ". Data reloaded.");
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error setting data folder path: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File folder = fileChooser.getSelectedFile();
+            if (folder != null) {
+                try {
+                    // Update the data file path in InventoryMgt, which will also save it
+                    inventoryManager.setDataFilePath(folder.getAbsolutePath());
+                    JOptionPane.showMessageDialog(this, "Data folder path set to:\n" + folder.getAbsolutePath(), "Path Updated", JOptionPane.INFORMATION_MESSAGE);
+                    // Refresh GUI after path change
+                    updateItemTable();
+                    updateCategoryTree();
+                    updateRestockAlerts();
+                    updateTotalWorthLabel();
+                    showDataFolderPathSummary(); // Update the displayed path immediately
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(this, "Error setting data path: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
     }
 
     // New method to show current data folder path summary
     private void showDataFolderPathSummary() {
-        String currentFilePath = inventoryManager.getDataFilePath(); // This returns the full file path
-        File file = new File(currentFilePath);
-        String folderPath = file.getParent(); // Get the parent directory (folder path)
-
-        if (folderPath == null || folderPath.isEmpty()) {
-            folderPath = "(Default: Application's current working directory)";
-        }
-
-        JOptionPane.showMessageDialog(this, 
-            "Current Inventory Data Folder:\n" + folderPath, 
-            "Data Folder Path Summary", 
-            JOptionPane.INFORMATION_MESSAGE);
+        // Retrieve the current data file path from InventoryMgt
+        String currentPath = inventoryManager.getDataFilePath();
+        JOptionPane.showMessageDialog(this, "Current Inventory Data Folder:\n" + currentPath, "Data Folder Path Summary", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // Method to update the item table
@@ -997,7 +877,7 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
         for (Map.Entry<String, Integer> entry : restockCount.entrySet()) {
             restockAlerts.append("Restock needed in category: ")
                          .append(entry.getKey())
-                         .append(" (" + entry.getValue() + " item(s) low)\n");
+                         .append(" (" + entry.getValue() + " item(s) left)\n");
         }
         if (restockAlerts.length() > 0) {
             restockTextArea.setText(restockAlerts.toString());
@@ -1008,21 +888,53 @@ public class InventorySwingGUI extends JFrame implements ActionListener {
 
     // Method to update the category tree
     public void updateCategoryTree() {
-         DefaultMutableTreeNode root = new DefaultMutableTreeNode("All Categories");
-         // Get categories from InventoryMgt
-        List<Category> categories = inventoryManager.getItemCategories();
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("All Categories");
+        categoryTreeModel = new DefaultTreeModel(root);
 
-        // Add categories to the tree
+        // Get categories from InventoryMgt and sort them
+        List<Category> categories = inventoryManager.getItemCategories();
+        categories.sort((c1, c2) -> c1.getCategoryName().compareToIgnoreCase(c2.getCategoryName()));
+
         for (Category category : categories) {
-            DefaultMutableTreeNode categoryNode = new DefaultMutableTreeNode(category.getCategoryName());
-            root.add(categoryNode);
+            root.add(new DefaultMutableTreeNode(category.getCategoryName()));
         }
 
-         categoryTreeModel = new DefaultTreeModel(root);
-         categoryTree.setModel(categoryTreeModel);
+        categoryTree.setModel(categoryTreeModel);
+        for (int i = 0; i < categoryTree.getRowCount(); i++) {
+            categoryTree.expandRow(i);
+        }
+        // Select the root node after updating the tree
+        categoryTree.setSelectionRow(0);
+    }
 
-        // Expand the root node
-        categoryTree.expandRow(0);
+    public void updateRestockAlerts() {
+        StringBuilder alerts = new StringBuilder();
+        alerts.append("Restock Alerts:\n");
+        boolean needsUpdate = false;
+
+        List<Category> categories = inventoryManager.getItemCategories();
+        categories.sort((c1, c2) -> c1.getCategoryName().compareToIgnoreCase(c2.getCategoryName())); // Sort for consistent display
+
+        for (Category category : categories) {
+            if (category.getCategoryQuantity() <= inventoryManager.getLowStockThreshold()) { // Use configurable threshold
+                alerts.append(String.format("Restock needed in category: %s (%d item(s) low)\n", category.getCategoryName(), category.getCategoryQuantity()));
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) {
+            alerts.append("No restock alerts at this time.\n");
+        }
+        restockTextArea.setText(alerts.toString());
+    }
+
+    public void updateTotalWorthLabel() {
+        double totalWorth = 0.0;
+        List<Item> items = inventoryManager.getInventoryItems();
+        for (Item item : items) {
+            totalWorth += item.getModelPrice() * item.getItemQuantity();
+        }
+        totalWorthLabel.setText("Total Inventory Worth: Php" + String.format("%.2f", totalWorth));
     }
 
     public static void main(String[] args) {

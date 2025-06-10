@@ -7,193 +7,194 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Availability {
     private String dataFilePath;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    public Availability() {
+        this.dataFilePath = System.getProperty("user.dir") + File.separator + "inventory_data.csv";
+        ensureDataFileExists();
+    }
+
     public Availability(String dataFilePath) {
         this.dataFilePath = dataFilePath;
-        // Ensure the data file exists when Availability is initialized
-        createDataFile();
+        ensureDataFileExists();
+    }
+
+    public String getDataFilePath() {
+        return dataFilePath;
     }
 
     public void setDataFilePath(String dataFilePath) {
-        if (dataFilePath == null || dataFilePath.trim().isEmpty()) {
-            throw new IllegalArgumentException("Data file path cannot be null or empty.");
-        }
         this.dataFilePath = dataFilePath;
-        createDataFile(); // Ensure the new data file exists
+        ensureDataFileExists();
     }
 
-    /**
-     * Reads all lines from the data file.
-     * @param filePath The path to the data file
-     * @return A list of strings, where each string is a line from the file
-     */
-    public List<String> readDataFromFile(String filePath) {
-        List<String> data = new ArrayList<>();
-        System.out.println("Attempting to read data from " + filePath + "...");
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                data.add(line);
+    private void ensureDataFileExists() {
+        File file = new File(dataFilePath);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+                try (PrintWriter writer = new PrintWriter(new FileWriter(dataFilePath, true))) {
+                    writer.println("CATEGORY_DATA");
+                    writer.println("ITEM_DATA");
+                    writer.println("LOG_DATA");
+                    writer.println("LOWSTOCK_DATA");
+                    writer.println("DATA_PATH");
+                }
+            } catch (IOException e) {
+                System.err.println("Error creating data file: " + e.getMessage());
             }
-            System.out.println("Data read successfully from " + filePath + ".");
-        } catch (IOException e) {
-            System.out.println("No existing " + filePath + " found or error reading file. Starting with empty data.");
-        }
-        return data;
-    }
-
-    /**
-     * Writes the given data string to the specified file, overwriting existing content.
-     * @param filePath The path to the file
-     * @param data The string data to write
-     */
-    public void writeDataToFile(String filePath, String data) {
-        System.out.println("Writing data to " + filePath + "...");
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
-            writer.print(data);
-            System.out.println("Data written successfully to " + filePath + ".");
-        } catch (IOException e) {
-            System.err.println("Error writing data to file: " + e.getMessage());
         }
     }
 
-    /**
-     * Appends transaction logs to the log file.
-     * @param logs The list of transaction log entries
-     */
-    public void writeTransactionLogsToFile(List<String> logs) {
-        // Overwrite the entire log file with the current logs to maintain consistency
-        try (PrintWriter logWriter = new PrintWriter(new FileWriter(this.dataFilePath))) {
-            for (String logEntry : logs) {
-                logWriter.println("LOG," + logEntry); // Ensure logs are written with the LOG prefix
-            }
-        } catch (IOException e) {
-            System.err.println("Error writing transaction logs to file: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Reads transaction logs from the data file.
-     * @return A list of transaction log entries
-     */
-    public List<String> readTransactionLogsFromFile() {
-        List<String> logsFromFile = new ArrayList<>();
-        System.out.println("Reading transaction log from file: " + this.dataFilePath + "...");
-        try (BufferedReader reader = new BufferedReader(new FileReader(this.dataFilePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("LOG,")) {
-                    logsFromFile.add(line.substring("LOG,".length()));
+    public void writeAllDataToFile(List<Item> items, List<Category> categories, int lowStockThreshold, List<String> transactionLogs, String currentDataPath) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(dataFilePath, false))) {
+            writer.println("CATEGORY_DATA");
+            for (Category category : categories) {
+                if (category.getCategoryQuantity() > 0 || category.getCategoryName().equals(InventoryMgt.UNCATEGORIZED)) {
+                    writer.println("CATEGORY," + category.getCategoryName());
                 }
             }
-            System.out.println("Finished reading transaction log from file.");
+
+            writer.println("ITEM_DATA");
+            for (Item item : items) {
+                writer.println("ITEM," + item.getModelNumber() + "," + item.getModelName() + "," + item.getModelPrice() + "," + item.getItemQuantity() + "," + item.getItemCategory());
+            }
+
+            writer.println("LOG_DATA");
+            for (String logEntry : transactionLogs) {
+                writer.println(logEntry);
+            }
+
+            writer.println("LOWSTOCK_DATA");
+            String timestamp = dateFormat.format(new Date());
+            writer.println("LOWSTOCK," + timestamp + ",SET," + lowStockThreshold + ",,");
+
+            writer.println("DATA_PATH");
+            writer.println("PATH," + currentDataPath);
+
+            System.out.println("All data exported successfully to " + dataFilePath);
         } catch (IOException e) {
-            System.err.println("Error reading transaction log file: " + e.getMessage());
+            System.err.println("Error exporting all data to file: " + e.getMessage());
         }
-        return logsFromFile;
     }
 
-    /**
-     * Checks if the data file exists.
-     * @return true if the data file exists, false otherwise
-     */
-    public boolean dataFileExists() {
-        File file = new File(this.dataFilePath);
-        return file.exists() && !file.isDirectory();
-    }
+    public Map<String, Object> readAllDataFromFile() {
+        List<Item> loadedItems = new ArrayList<>();
+        List<Category> loadedCategories = new ArrayList<>();
+        List<String> loadedLogs = new ArrayList<>();
+        int loadedLowStockThreshold = 5;
+        String loadedDataPath = System.getProperty("user.dir") + File.separator + "inventory_data.csv";
 
-    /**
-     * Creates the data file if it does not exist.
-     * @return true if the file was created or already exists, false on error
-     */
-    public boolean createDataFile() {
-        System.out.println("Attempting to create data file: " + this.dataFilePath + "...");
-        try {
-            File file = new File(this.dataFilePath);
-            if (file.createNewFile()) {
-                System.out.println("Data file created successfully: " + this.dataFilePath);
-                return true;
-            } else {
-                System.out.println("Data file already exists: " + this.dataFilePath);
-                return true; // File already exists is also a success for creation check
+        try (BufferedReader reader = new BufferedReader(new FileReader(dataFilePath))) {
+            String line;
+            String currentSection = "";
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                if (line.endsWith("_DATA")) {
+                    currentSection = line;
+                    continue;
+                }
+
+                switch (currentSection) {
+                    case "CATEGORY_DATA":
+                        if (line.startsWith("CATEGORY,") && line.split(",").length >= 2) {
+                            String categoryName = line.split(",")[1].trim();
+                            addCategoryIfNotExist(loadedCategories, categoryName);
+                        }
+                        break;
+                    case "ITEM_DATA":
+                        if (line.startsWith("ITEM,") && line.split(",").length >= 6) {
+                            try {
+                                String[] parts = line.split(",");
+                                String modelNumber = parts[1].trim();
+                                String modelName = parts[2].trim();
+                                double modelPrice = Double.parseDouble(parts[3].trim());
+                                int itemQuantity = Integer.parseInt(parts[4].trim());
+                                String itemCategory = parts[5].trim();
+                                loadedItems.add(new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory));
+                                addOrUpdateCategory(loadedCategories, itemCategory, itemQuantity);
+                            } catch (NumberFormatException e) {
+                                System.err.println("Skipping invalid ITEM line (Number format error): " + line);
+                            }
+                        }
+                        break;
+                    case "LOG_DATA":
+                        loadedLogs.add(line);
+                        if (line.startsWith("LOWSTOCK,") && line.split(",").length >= 4) {
+                            try {
+                                loadedLowStockThreshold = Integer.parseInt(line.split(",")[3].trim());
+                            } catch (NumberFormatException e) {
+                                System.err.println("Error parsing LOWSTOCK threshold from log: " + line);
+                            }
+                        }
+                        break;
+                    case "LOWSTOCK_DATA":
+                        if (line.startsWith("LOWSTOCK,") && line.split(",").length >= 4) {
+                            try {
+                                loadedLowStockThreshold = Integer.parseInt(line.split(",")[3].trim());
+                            } catch (NumberFormatException e) {
+                                System.err.println("Error parsing LOWSTOCK threshold: " + line);
+                            }
+                        }
+                        break;
+                    case "DATA_PATH":
+                        if (line.startsWith("PATH,") && line.split(",").length >= 2) {
+                            loadedDataPath = line.split(",")[1].trim();
+                        }
+                        break;
+                }
             }
         } catch (IOException e) {
-            System.err.println("Error creating data file: " + e.getMessage());
-            return false;
+            System.out.println("No existing " + dataFilePath + " found or error reading file. Starting with default values.");
+        }
+
+        List<Category> filteredCategories = loadedCategories.stream()
+                .filter(c -> c.getCategoryQuantity() > 0 || c.getCategoryName().equals(InventoryMgt.UNCATEGORIZED))
+                .collect(Collectors.toList());
+
+        Map<String, Object> allLoadedData = new HashMap<>();
+        allLoadedData.put("items", loadedItems);
+        allLoadedData.put("categories", filteredCategories);
+        allLoadedData.put("logs", loadedLogs);
+        allLoadedData.put("lowStockThreshold", loadedLowStockThreshold);
+        allLoadedData.put("dataPath", loadedDataPath);
+
+        return allLoadedData;
+    }
+
+    private void addOrUpdateCategory(List<Category> categories, String categoryName, int quantity) {
+        boolean found = false;
+        for (Category cat : categories) {
+            if (cat.getCategoryName().equalsIgnoreCase(categoryName)) {
+                cat.increaseQuantity(quantity);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            categories.add(new Category(categoryName, quantity));
         }
     }
 
-    /**
-     * Checks if an item is available based on its quantity.
-     * @param itemQuantity The quantity of the item to check
-     * @return true if the item is available (quantity > 0), false otherwise
-     */
-    public boolean checkAvailability(int itemQuantity) {
-        if (itemQuantity < 0) {
-            throw new IllegalArgumentException("Item quantity cannot be negative");
+    private void addCategoryIfNotExist(List<Category> categories, String categoryName) {
+        boolean found = false;
+        for (Category cat : categories) {
+            if (cat.getCategoryName().equalsIgnoreCase(categoryName)) {
+                found = true;
+                break;
+            }
         }
-        boolean isAvailable = itemQuantity > 0;
-        if (isAvailable) {
-            System.out.println("Yes, this item is available.");
-        } else {
-            System.out.println("Sorry, this item is not available.");
+        if (!found) {
+            categories.add(new Category(categoryName, 0));
         }
-        return isAvailable;
-    }
-
-    /**
-     * Checks if an item needs restock based on its quantity and the threshold.
-     * @param itemQuantity The quantity of the item to check
-     * @return true if the item needs restock, false otherwise
-     */
-    public boolean needsRestock(int itemQuantity) {
-        if (itemQuantity < 0) {
-            throw new IllegalArgumentException("Item quantity cannot be negative");
-        }
-        return itemQuantity <= MIN_QUANTITY_THRESHOLD && itemQuantity > 0;
-    }
-
-    /**
-     * Displays a restock warning message for an item.
-     * @param itemName The name of the item
-     * @param itemQuantity The current quantity of the item
-     */
-    public void displayRestockWarning(String itemName, int itemQuantity, int categoryQuantity, String categoryName) {
-        if (itemName == null || itemName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Item name cannot be null or empty");
-        }
-        if (itemQuantity < 0) {
-            throw new IllegalArgumentException("Item quantity cannot be negative");
-        }
-        if (needsRestock(categoryQuantity)) {
-            System.out.println("\n!!! RESTOCK WARNING !!!");
-            System.out.println("Category: " + categoryName + " is running low. Current Quantity: " + categoryQuantity);
-            System.out.println("------------------------");
-        }
-    }
-
-    /**
-     * Gets formatted details of an item.
-     * @param modelName The name of the model
-     * @param modelPrice The price of the model
-     * @param itemCategory The category of the item
-     * @return A formatted string containing the item details
-     */
-    public String getDetails(String modelName, double modelPrice, String itemCategory) {
-        if (modelName == null || modelName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Model name cannot be null or empty");
-        }
-        if (modelPrice < 0) {
-            throw new IllegalArgumentException("Model price cannot be negative");
-        }
-        if (itemCategory == null || itemCategory.trim().isEmpty()) {
-            throw new IllegalArgumentException("Item category cannot be null or empty");
-        }
-        return "Details: Name=" + modelName + ", Price=" + modelPrice + ", Category=" + itemCategory;
     }
 } 

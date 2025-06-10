@@ -1,9 +1,12 @@
+CATEGORY_DATA
+CATEGORY,Brake Cable
 CATEGORY,Helmet
-CATEGORY,Side Gasket
-CATEGORY,Knuckle Bearing
-CATEGORY,Oil Seal
 CATEGORY,Ignition Coil
 CATEGORY,Ignition Switch
+CATEGORY,Knuckle Bearing
+CATEGORY,Oil Seal
+CATEGORY,Side Gasket
+ITEM_DATA
 ITEM,7204,Helmet 103,300.0,1,Helmet
 ITEM,9603,Side Gasket 9000,200.0,1,Side Gasket
 ITEM,8190,Aura Knuckle Bearing Set HKZ/NP,100.0,1,Knuckle Bearing
@@ -19,7 +22,13 @@ ITEM,3933,Moto Helmet Fullface Shoe (BLK),500.0,1,Helmet
 ITEM,8744,Barako/BC175 IGNITION COIL,130.0,1,Ignition Coil
 ITEM,10777,Crypton Ignition Coil,135.0,1,Ignition Coil
 ITEM,9436,Wave100R Ignition Switch HK2,115.0,1,Ignition Switch
-ITEM,999,Test,100.0,1,Helmet
+ITEM,6609,Barako/BC175 Brake Cable NP Brand,48.0,1,Brake Cable
+ITEM,8098,Crypton R Brake Cable NP Brand,50.0,1,Brake Cable
+ITEM,13069,Dream/C100/Wave100 Brake Cable Federal,65.0,1,Brake Cable
+ITEM,6901,Dream/C100/Wave100 Brake Cable NP Brand,65.0,1,Brake Cable
+ITEM,13079,FZ16 Brake Cable (21C-F6335-00) Federal Brand Japan Quality,95.0,1,Brake Cable
+ITEM,13071,GD110/Suzuki Brake Cable Federal Brand Japan Quality,75.0,1,Brake Cable
+LOG_DATA
 LOG,2025-06-01 16:16:00,ADD,Helmet 103,7204,1,Helmet
 LOG,2025-06-01 16:16:49,ADD,Side Gasket 9000,9603,1,Side Gasket
 LOG,2025-06-01 20:00:34,ADD,Aura Knuckle Bearing Set HKZ/NP,8190,1,Knuckle Bearing
@@ -48,3 +57,38 @@ LOG,2025-06-06 16:43:10,REMOVE,Test,999,1,Helmet
 LOG,2025-06-06 16:43:25,REMOVE,Test,999,1,Helmet
 LOG,2025-06-06 17:40:55,REMOVE,Test,999,1,Helmet
 LOG,2025-06-08 13:45:14,REMOVE,Test,999,1,Helmet
+LOG,2025-06-08 15:17:20,REMOVE,Test,999,1,Helmet
+LOG,2025-06-08 15:39:23,ADD,Brake Shoe CT100,9417,1,Brake Shoe
+LOG,2025-06-08 15:39:46,ADD,Brake Shoe HD3,9418,1,Brake Shoe
+LOG,2025-06-08 15:40:13,ADD,Brake Shoe w/ Slotted Line TMX155 "HKS",5918,1,Brake Shoe
+LOG,2025-06-08 15:41:01,ADD,Barako/BC175 Brake Cable NP BRAND,6609,1,Brake Cable
+LOG,2025-06-08 15:41:07,REMOVE,Barako/BC175 Brake Cable NP BRAND,6609,1,Brake Cable
+LOG,2025-06-08 15:41:54,ADD,Barako/BC175 Brake Cable NP Brand,6609,1,Brake Cable
+LOG,2025-06-08 15:42:17,ADD,Crypton R Brake Cable NP Brand,8098,1,Brake Cable
+LOG,2025-06-08 15:42:41,ADD,Dream/C100/Wave100 Brake Cable Federal,13069,1,Brake Cable
+LOG,2025-06-08 15:43:21,ADD,Dream/C100/Wave100 Brake Cable NP Brand,6901,1,Brake Cable
+LOG,2025-06-08 15:46:21,ADD,FZ16 Brake Cable (21C-F6335-00) Federal Brand Japan Quality,13079,1,Brake Cable
+LOG,2025-06-08 15:46:48,ADD,GD110/Suzuki Brake Cable Federal Brand Japan Quality,13071,1,Brake Cable
+LOG,2025-06-08 15:52:32,REMOVE,Brake Shoe w/ Slotted Line TMX155 "HKS",5918,1,Brake Shoe
+LOG,2025-06-08 15:52:39,REMOVE,Brake Shoe CT100,9417,1,Brake Shoe
+LOG,2025-06-08 15:52:46,REMOVE,Brake Shoe HD3,9418,1,Brake Shoe
+LOG,2025-06-10 13:23:54,ADD,Maganda si Sensei,9,1,Helmet
+LOG,2025-06-10 13:24:23,ADD,Maganda si Magalona,70,1,Motorcycle
+LOG,2025-06-10 15:34:49,CATEGORY_REMOVED,Motorcycle,,0,
+LOG,2025-06-10 15:34:49,REMOVE,Maganda si Magalona,70,1,Motorcycle
+LOG,2025-06-10 15:34:54,REMOVE,Maganda si Sensei,9,1,Helmet
+LOG,2025-06-10 15:37:48,ADD,Pogi si Jhai,69420,1,Motorcycle
+LOG,2025-06-10 15:37:57,CATEGORY_REMOVED,Motorcycle,,0,
+LOG,2025-06-10 15:37:57,REMOVE,Pogi si Jhai,69420,1,Motorcycle
+LOG,2025-06-10 15:46:00,CATEGORY_REMOVED,Motorcycle,,0,
+LOG,2025-06-10 15:46:00,REMOVE,Maganda si Magalona,70,1,Motorcycle
+LOG,2025-06-10 15:46:03,REMOVE,Maganda si Sensei,9,1,Helmet
+LOG,2025-06-10 15:59:46,REMOVE,Maganda si Sensei,9,1,Helmet
+LOG,2025-06-10 15:59:46,REMOVE,Maganda si Sensei,9,1,Helmet
+LOG,2025-06-10 15:59:48,CATEGORY_REMOVED,Motorcycle,,0,
+LOG,2025-06-10 16:11:29,ADD,Carlos,9898,1,Siraulo
+LOG,2025-06-10 16:11:32,CATEGORY_REMOVED,Siraulo,,0,
+LOWSTOCK_DATA
+LOWSTOCK,2025-06-10 16:17:17,SET,3,,
+DATA_PATH
+PATH,C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\inventory_data.csv

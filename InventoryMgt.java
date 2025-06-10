@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.text.SimpleDateFormat;
 import java.io.File;
+import java.util.Map; // Import Map
 
 public class InventoryMgt {
     private List<Item> inventoryItems;
@@ -16,7 +17,7 @@ public class InventoryMgt {
     private List<String> transactionLogs;
     private Availability availabilityChecker;
     private String dataFilePath; // This will now store the full file path
-    private int lowStockThreshold = 5; // Default low stock threshold
+    private int lowStockThreshold; // Default low stock threshold will be read from file
 
     private static final String INVENTORY_DATA_FILENAME = "inventory_data.csv"; // New constant
     public static final String UNCATEGORIZED = "Uncategorized";
@@ -26,10 +27,13 @@ public class InventoryMgt {
         inventoryItems = new ArrayList<>();
         itemCategories = new ArrayList<>();
         transactionLogs = new ArrayList<>();
-        // Default file path: current working directory + filename
+
+        // Initialize Availability with a default path first
         this.dataFilePath = System.getProperty("user.dir") + File.separator + INVENTORY_DATA_FILENAME;
-        this.availabilityChecker = new Availability(this.dataFilePath); // Initialize Availability with full path
-        loadData(); // Load data from the default path
+        this.availabilityChecker = new Availability(this.dataFilePath); 
+
+        // Load all data, including potentially stored dataFilePath and lowStockThreshold
+        loadData(); 
     }
 
     // New methods for low stock threshold
@@ -41,7 +45,11 @@ public class InventoryMgt {
         if (lowStockThreshold < 0) {
             throw new IllegalArgumentException("Low stock threshold cannot be negative.");
         }
+        int oldThreshold = this.lowStockThreshold; // Capture old value for logging
         this.lowStockThreshold = lowStockThreshold;
+        // Save all data, including the updated low stock threshold
+        saveData();
+        logTransaction("LOWSTOCK_SET", "", "", lowStockThreshold, "", oldThreshold); // Log the change
     }
 
     // New methods for data file path
@@ -53,6 +61,7 @@ public class InventoryMgt {
         // Construct the full file path from the selected folder
         this.dataFilePath = folderPath + File.separator + INVENTORY_DATA_FILENAME;
         this.availabilityChecker.setDataFilePath(this.dataFilePath); // Update Availability's full file path
+        saveData(); // Save all data with the new file path
     }
 
     // Getter for the current full data file path
@@ -97,6 +106,7 @@ public class InventoryMgt {
         }
         inventoryItems.add(item);
         updateCategoryQuantity(item.getItemCategory(), item.getItemQuantity());
+        saveData(); // Save data after adding an item
     }
 
     public void removeItemByNumber(String modelNumber) {
@@ -105,36 +115,67 @@ public class InventoryMgt {
         }
         Iterator<Item> iterator = inventoryItems.iterator();
         boolean found = false;
+        Item removedItem = null; // To store the removed item for logging
         while (iterator.hasNext()) {
             Item item = iterator.next();
             if (item.getModelNumber().equals(modelNumber)) {
                 updateCategoryQuantity(item.getItemCategory(), -item.getItemQuantity());
                 iterator.remove();
                 found = true;
+                removedItem = item;
+                removeCategoryIfEmpty(item.getItemCategory());
                 break;
             }
         }
         if (!found) {
             throw new IllegalStateException("Item with model number " + modelNumber + " not found");
         }
+        saveData(); // Save data after removing an item
+        if (removedItem != null) {
+            logTransaction("REMOVE", removedItem.getModelName(), removedItem.getModelNumber(), removedItem.getItemQuantity(), removedItem.getItemCategory(), 0);
+        }
     }
 
-    public void removeItemByCategory(String category) {
-        if (category == null || category.trim().isEmpty()) {
+    public void removeItemByCategory(String categoryName) {
+        if (categoryName == null || categoryName.trim().isEmpty()) {
             throw new IllegalArgumentException("Category cannot be null or empty");
         }
         Iterator<Item> iterator = inventoryItems.iterator();
         boolean found = false;
+        List<String> categoriesToCheck = new ArrayList<>(); // Collect categories to check after removal
+        List<Item> removedItems = new ArrayList<>(); // To store removed items for logging
         while (iterator.hasNext()) {
             Item item = iterator.next();
-            if (item.getItemCategory().equals(category)) {
+            if (item.getItemCategory().equals(categoryName)) {
                 updateCategoryQuantity(item.getItemCategory(), -item.getItemQuantity());
+                categoriesToCheck.add(item.getItemCategory());
                 iterator.remove();
+                removedItems.add(item); // Add to removed items list
                 found = true;
             }
         }
         if (!found) {
-            throw new IllegalStateException("No items found in category " + category);
+            throw new IllegalStateException("No items found in category " + categoryName);
+        }
+        // Check categories for emptiness after all items are removed
+        for (String catName : categoriesToCheck) {
+            removeCategoryIfEmpty(catName);
+        }
+        saveData(); // Save data after removing items by category
+        for (Item item : removedItems) {
+            logTransaction("REMOVE_CATEGORY_ITEM", item.getModelName(), item.getModelNumber(), item.getItemQuantity(), item.getItemCategory(), 0);
+        }
+    }
+
+    // Helper method to remove a category if its quantity becomes 0
+    private void removeCategoryIfEmpty(String categoryName) {
+        Category category = findCategoryByName(categoryName);
+        if (category != null && category.getCategoryQuantity() == 0 && !categoryName.equals(UNCATEGORIZED)) {
+            // Do not remove Uncategorized even if empty
+            itemCategories.remove(category);
+            System.out.println("Category '" + categoryName + "' removed as it is now empty.");
+            logTransaction("CATEGORY_REMOVED", categoryName, "", 0, "", 0); // Log category removal
+            saveData(); // Save data after category removal
         }
     }
 
@@ -163,6 +204,7 @@ public class InventoryMgt {
         }
         Category category = new Category(categoryName, initialQuantity);
         itemCategories.add(category);
+        saveData(); // Save data after adding a category
     }
 
     public void removeCategory(String categoryName) {
@@ -173,6 +215,7 @@ public class InventoryMgt {
         if (!removed) {
             throw new IllegalStateException("Category " + categoryName + " not found");
         }
+        saveData(); // Save data after removing a category
     }
 
     public void updateCategoryQuantity(String categoryName, int quantityChange) {
@@ -181,13 +224,17 @@ public class InventoryMgt {
         }
         Category category = findCategoryByName(categoryName);
         if (category == null) {
-            throw new IllegalStateException("Category " + categoryName + " not found");
+            // If category doesn't exist, create it (especially important for adding items to new categories)
+            addCategory(categoryName, 0); // Add with 0 quantity initially
+            category = findCategoryByName(categoryName); // Retrieve the newly created category
         }
+
         if (quantityChange > 0) {
             category.increaseQuantity(quantityChange);
         } else if (quantityChange < 0) {
             category.decreaseQuantity(Math.abs(quantityChange)); // Use decreaseQuantity for negative changes
         }
+        saveData(); // Save data after updating category quantity
     }
 
     public void viewCategories() {
@@ -203,134 +250,42 @@ public class InventoryMgt {
         }
     }
 
-    public void loadCategories() {
-        // Categories are now loaded from the data file in importData()
-        // Hardcoded initialization is removed.
-    }
-
-    public void importData(String filePath) {
-        List<String> rawData = availabilityChecker.readDataFromFile(filePath);
-        // Process raw data to populate inventoryItems and itemCategories
-        inventoryItems.clear();
-        itemCategories.clear();
-        transactionLogs.clear();
-
-        for (String line : rawData) {
-            line = line.trim();
-            if (line.isEmpty()) continue;
-
-            if (line.startsWith("CATEGORY,")) {
-                String[] parts = line.substring("CATEGORY,".length()).split(",");
-                if (parts.length >= 1) {
-                    try {
-                        String categoryName = parts[0].trim();
-                        Category category = new Category(categoryName, 0);
-                        itemCategories.add(category);
-                    } catch (Exception e) {
-                        System.err.println("Skipping invalid CATEGORY line: " + line);
-                    }
-                }
-            } else if (line.startsWith("ITEM,")) {
-                String[] parts = line.substring("ITEM,".length()).split(",");
-                if (parts.length >= 5) {
-                    try {
-                        String modelNumber = parts[0].trim();
-                        String modelName = parts[1].trim();
-                        double modelPrice = Double.parseDouble(parts[2].trim());
-                        int itemQuantity = Integer.parseInt(parts[3].trim());
-                        String itemCategory = parts[4].trim();
-
-                        if (itemQuantity != 1) {
-                            System.err.println("Warning: Item quantity in file is not 1. Using 1 for item " + modelNumber);
-                            itemQuantity = 1;
-                        }
-
-                        Item importedItem = new Item(modelPrice, modelName, modelNumber, itemQuantity, itemCategory);
-                        inventoryItems.add(importedItem);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Skipping invalid ITEM line (Number Format Error): " + line);
-                    } catch (Exception e) {
-                        System.err.println("Skipping invalid ITEM line: " + line);
-                    }
-                }
-            } else if (line.startsWith("LOG,")) {
-                String logEntry = line.substring("LOG,".length());
-                transactionLogs.add(logEntry);
-            }
-        }
-
-        // Recalculate category quantities after loading all items
-        for (Category category : itemCategories) {
-            category.setCategoryQuantity(0);
-        }
-        for (Item item : inventoryItems) {
-            Category category = findCategoryByName(item.getItemCategory());
-            if (category != null) {
-                category.increaseQuantity(item.getItemQuantity());
-            } else {
-                System.err.println("Warning: Item " + item.getModelNumber() + " has category " + item.getItemCategory() + " which was not found during import.");
-            }
-        }
-        System.out.println("Data imported successfully from " + filePath + ". Total items: " + inventoryItems.size() + ", Categories: " + itemCategories.size() + ", Log entries: " + transactionLogs.size());
-    }
-
-    // Method to load data (internal, uses importData)
     public void loadData() {
-        importData(this.dataFilePath);
-    }
-    
-    // Modified exportData to use Availability
-    public void exportData(String filePath) {
-        StringBuilder dataToExport = new StringBuilder();
-        // Export categories
-        for (Category category : itemCategories) {
-            dataToExport.append("CATEGORY,")
-                        .append(category.getCategoryName())
-                        .append("\n");
-        }
-        // Export items
-        for (Item item : inventoryItems) {
-            dataToExport.append("ITEM,")
-                        .append(item.getModelNumber()).append(",")
-                        .append(item.getModelName()).append(",")
-                        .append(item.getModelPrice()).append(",")
-                        .append(item.getItemQuantity()).append(",")
-                        .append(item.getItemCategory())
-                        .append("\n");
-        }
-        // Export logs
-        for (String logEntry : transactionLogs) {
-            dataToExport.append("LOG,").append(logEntry).append("\n");
-        }
-        availabilityChecker.writeDataToFile(filePath, dataToExport.toString());
+        Map<String, Object> loadedData = availabilityChecker.readAllDataFromFile();
+
+        this.inventoryItems = (List<Item>) loadedData.get("items");
+        this.itemCategories = (List<Category>) loadedData.get("categories");
+        this.transactionLogs = (List<String>) loadedData.get("logs");
+        this.lowStockThreshold = (int) loadedData.get("lowStockThreshold");
+        this.dataFilePath = (String) loadedData.get("dataPath");
+
+        // Ensure the availability checker's data path is consistent with the loaded path
+        this.availabilityChecker.setDataFilePath(this.dataFilePath);
     }
 
-    // Modified saveData to use exportData
+    public void exportData() {
+        availabilityChecker.writeAllDataToFile(inventoryItems, itemCategories, lowStockThreshold, transactionLogs, dataFilePath);
+    }
+
     public void saveData() {
-        exportData(this.dataFilePath);
+        exportData();
     }
 
-    public void logTransaction(String action, String modelName, String modelNumber, int quantity) {
+    public void logTransaction(String action, String modelName, String modelNumber, int quantity, String categoryAffected, int oldValue) {
         String timestamp = dateFormat.format(new Date());
-        String logEntry = String.format("%s,%s,%s,%s,%d,%s",
-                                        timestamp,
-                                        action,
-                                        modelName,
-                                        modelNumber,
-                                        quantity,
-                                        findItemByModelNumber(modelNumber) != null ? findItemByModelNumber(modelNumber).getItemCategory() : "N/A"); // Include category if item exists
+        String logEntry;
+
+        if (action.equals("LOWSTOCK_SET")) {
+            logEntry = "LOWSTOCK," + timestamp + ",SET," + quantity + "," + oldValue + ",";
+        } else {
+            logEntry = "LOG," + timestamp + "," + action + "," + modelName + "," + modelNumber + "," + quantity + "," + categoryAffected;
+        }
         transactionLogs.add(logEntry);
-        // Save logs immediately after adding a transaction
-        availabilityChecker.writeTransactionLogsToFile(transactionLogs);
+        // Logs are now written as part of the comprehensive saveData() call
     }
 
     public List<String> getTransactionLogs() {
         return transactionLogs;
-    }
-
-    // Modified to use Availability
-    public List<String> readTransactionLogsFromFile() {
-        return availabilityChecker.readTransactionLogsFromFile();
     }
 
     public List<Category> getItemCategories() {
