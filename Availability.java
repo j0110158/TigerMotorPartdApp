@@ -44,7 +44,7 @@ public class Availability {
             writer.println("ITEM_DATA");
             for (Item item : items) {
                 writer.println("ITEM," + item.getModelNumber() + "," + item.getModelName() + "," + item.getModelPrice() + "," + item.getItemQuantity() + "," + item.getItemCategory());
-            }
+        }
 
             writer.println("LOG_DATA");
             for (String logEntry : transactionLogs) {
@@ -58,6 +58,7 @@ public class Availability {
             System.out.println("All data exported successfully to " + dataFilePath);
         } catch (IOException e) {
             System.err.println("Error exporting all data to file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -85,7 +86,7 @@ public class Availability {
                         if (line.startsWith("CATEGORY,") && line.split(",").length >= 2) {
                             String categoryName = line.split(",")[1].trim();
                             addCategoryIfNotExist(loadedCategories, categoryName);
-                        }
+    }
                         break;
                     case "ITEM_DATA":
                         if (line.startsWith("ITEM,") && line.split(",").length >= 6) {
@@ -131,6 +132,7 @@ public class Availability {
             }
         } catch (IOException e) {
             System.out.println("No existing " + dataFilePath + " found or error reading file. Starting with default values.");
+            e.printStackTrace();
         }
 
         List<Category> filteredCategories = loadedCategories.stream()

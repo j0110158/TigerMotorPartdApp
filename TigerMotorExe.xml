@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>false</dontWrapJar>
+  <headerType>gui</headerType>
+  <jar>C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\TigerMotorhubApp.jar</jar>
+  <outfile>C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\exe_output\TigerMotorhubApp.exe</outfile>
+  <errTitle></errTitle>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl></downloadUrl>
+  <supportUrl></supportUrl>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest></manifest>
+  <icon></icon>
+  <jre>
+    <path>%JAVA_HOME%;%PATH%</path>
+    <requiresJdk>false</requiresJdk>
+    <requires64Bit>false</requires64Bit>
+    <minVersion>1.8.0</minVersion>
+    <maxVersion></maxVersion>
+  </jre>
+  <versionInfo>
+    <fileVersion>1.0.0.1</fileVersion>
+    <txtFileVersion>June 2025 Official Release V1</txtFileVersion>
+    <fileDescription> A Motor Parts Inventory App in Windows</fileDescription>
+    <copyright>Copyright © 2025 June ALT+F4 Tech Group. All rights reserved.</copyright>
+    <productVersion>1.0.0.1</productVersion>
+    <txtProductVersion>Initial Release </txtProductVersion>
+    <productName>TIGER MOTORHUB APP</productName>
+    <companyName>Tiger Motor Parts</companyName>
+    <internalName>TigerMotorHubApp</internalName>
+    <originalFilename>TigerMotorhhubApp.exe</originalFilename>
+    <trademarks></trademarks>
+    <language>ENGLISH_US</language>
+  </versionInfo>
+</launch4jConfig>
