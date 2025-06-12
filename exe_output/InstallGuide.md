@@ -1,25 +1,67 @@
-# Install Guide for Tiger Motorhub App
+# Tiger Motor Parts App Installation Guide
 
-This guide will help you set up and run the `TigerMotorhubApp.exe` on your Windows system.
+## System Requirements
+- Windows 10 or later
+- Java 18 or later (JDK 18+ recommended, JDK 24.0.1 or later preferred)
 
-## Prerequisites:
-To run this application, you need to have a **Java Runtime Environment (JRE) installed on your system, version 8 or newer.**
+## Quick Start Guide
 
-If you don't have Java installed, or if you have an older version, please download and install a compatible JRE (e.g., OpenJDK 8 or a later LTS version) from a trusted source like Oracle or Adoptium. You can usually find the latest distributions by searching for "Download OpenJDK 8" or "Download Oracle JRE 8+".
+### 1. Install Java
+1. Download and install Java from Oracle's website:
+   - [Download JDK 24.0.1](https://download.oracle.com/java/24/latest/jdk-24_windows-x64_bin.exe)
+   - Follow the installation wizard's instructions
+   - Accept the default installation settings
 
-## How to Run the Application:
+### 2. Verify Java Installation
+1. Open Command Prompt (Press Windows + R, type `cmd`, press Enter)
+2. Type `java -version` and press Enter
+3. You should see something like:
+   ```
+   java version "24.0.1" 2024-04-16
+   Java(TM) SE Runtime Environment (build 24.0.1+9)
+   Java HotSpot(TM) 64-Bit Server VM (build 24.0.1+9, mixed mode, sharing)
+   ```
 
-1.  **Locate the Executable:** Navigate to the `exe_output` folder (where this `InstallGuide.md` file is located). You will find the executable file named `TigerMotorhubApp.exe`.
+### 3. Install Tiger Motor Parts App
+1. Download the application files:
+   - `TigerMotorhubApp.exe`
+   - `inventory_data.csv`
+2. Create a new folder on your computer (e.g., `C:\TigerMotorParts`)
+3. Copy both files into this folder
 
-2.  **Double-Click to Run:** Simply double-click `TigerMotorhubApp.exe`.
-    *   If a security warning appears (e.g., Windows SmartScreen or your antivirus), this is a common occurrence for unsigned executables. You can usually click "More info" and then "Run anyway" to proceed. This warning does NOT indicate an issue with the application itself.
+### 4. Running the Application
+1. Navigate to the folder where you saved the files
+2. Double-click `TigerMotorhubApp.exe`
+3. The application should start and show "Data loaded successfully"
 
-3.  **Data File Location:**
-    *   The application will automatically look for its data file (`inventory_data.csv`) in the same directory where the `TigerMotorhubApp.exe` is located (`exe_output`).
-    *   If `inventory_data.csv` is not found, the application will start with an empty inventory and create a new `inventory_data.csv` file in the same `exe_output` directory upon the first save operation.
-    *   You can change the data folder path from within the application via the `Settings -> Set Data Folder Path` menu option if you wish to store your data elsewhere.
+## Troubleshooting
 
-## Troubleshooting:
+### If the application doesn't start:
 
-*   **"A JNI error has occurred" or similar Java errors:** Ensure you have Java Runtime Environment (JRE) version 8 or newer installed on your system. If you have multiple Java versions, ensure the correct one is prioritized in your system's PATH environment variables.
-*   **Antivirus blocking the application:** As mentioned, unsigned executables can sometimes be flagged. If your antivirus blocks it, you may need to add an exception for `TigerMotorhubApp.exe` in your antivirus software settings. 
+1. **Check Java Installation**
+   - Open Command Prompt
+   - Type `java -version`
+   - If you see "'java' is not recognized", you need to install Java
+
+2. **Common Issues**
+   - "Java not found": Install Java from the link above
+   - "Data file not found": Make sure `inventory_data.csv` is in the same folder as the EXE
+   - "Application failed to start": Try restarting your computer after Java installation
+
+3. **Still Having Issues?**
+   - Make sure Windows is up to date
+   - Try running the application as administrator
+   - Check if your antivirus is blocking the application
+
+## Support
+If you need help:
+1. Check the troubleshooting section above
+2. Make sure Java is properly installed
+3. Verify all files are in the same folder
+4. Try restarting your computer
+
+## Notes
+- The application requires Java 18 or later
+- Keep all files in the same folder
+- The application is designed for 64-bit Windows
+- Your inventory data is automatically saved in `inventory_data.csv` 

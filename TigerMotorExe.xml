@@ -2,36 +2,40 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\TigerMotorhubApp.jar</jar>
-  <outfile>C:\Users\Carlos\OneDrive - San Beda University\Desktop\TIGER MOTORHUB\TigerMotorPartdApp\exe_output\TigerMotorhubApp.exe</outfile>
-  <errTitle></errTitle>
+  <jar>TigerMotorhubApp.jar</jar>
+  <outfile>TigerMotorhubApp.exe</outfile>
+  <errTitle>Tiger Motor Parts App</errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
-  <downloadUrl></downloadUrl>
+  <downloadUrl>http://java.com/download</downloadUrl>
   <supportUrl></supportUrl>
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
   <icon></icon>
   <jre>
-    <path>%JAVA_HOME%;%PATH%</path>
-    <requiresJdk>false</requiresJdk>
-    <requires64Bit>false</requires64Bit>
-    <minVersion>1.8.0</minVersion>
+    <path>C:\Program Files\Java\jdk-24\bin</path>
+    <bundledJre64Bit>true</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion>24.0.0</minVersion>
     <maxVersion></maxVersion>
+    <jdkPreference>preferJre</jdkPreference>
+    <runtimeBits>64</runtimeBits>
+    <initialHeapSize>128</initialHeapSize>
+    <maxHeapSize>512</maxHeapSize>
   </jre>
   <versionInfo>
     <fileVersion>1.0.0.1</fileVersion>
     <txtFileVersion>June 2025 Official Release V1</txtFileVersion>
-    <fileDescription> A Motor Parts Inventory App in Windows</fileDescription>
+    <fileDescription>A Motor Parts Inventory App in Windows</fileDescription>
     <copyright>Copyright © 2025 June ALT+F4 Tech Group. All rights reserved.</copyright>
     <productVersion>1.0.0.1</productVersion>
-    <txtProductVersion>Initial Release </txtProductVersion>
+    <txtProductVersion>Initial Release</txtProductVersion>
     <productName>TIGER MOTORHUB APP</productName>
     <companyName>Tiger Motor Parts</companyName>
     <internalName>TigerMotorHubApp</internalName>
-    <originalFilename>TigerMotorhhubApp.exe</originalFilename>
+    <originalFilename>TigerMotorhubApp.exe</originalFilename>
     <trademarks></trademarks>
     <language>ENGLISH_US</language>
   </versionInfo>

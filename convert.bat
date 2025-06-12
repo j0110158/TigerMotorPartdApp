@@ -1,0 +1,2 @@
+@echo off
+powershell -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.SaveFileDialog; $f.Filter = 'Executable Files (*.exe)|*.exe'; $f.FileName = 'TigerMotorhubApp.exe'; if($f.ShowDialog() -eq 'OK') { Copy-Item 'TigerMotorhubApp.bat' $f.FileName }" 
